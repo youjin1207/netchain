@@ -5,19 +5,49 @@
 
 using namespace Rcpp;
 
-// rcpp_hello_world
-List rcpp_hello_world();
-RcppExport SEXP _netchain_rcpp_hello_world() {
+// multimainfunction
+double multimainfunction(NumericVector pars, NumericMatrix newcombined);
+RcppExport SEXP _netchain_multimainfunction(SEXP parsSEXP, SEXP newcombinedSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(rcpp_hello_world());
+    Rcpp::traits::input_parameter< NumericVector >::type pars(parsSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type newcombined(newcombinedSEXP);
+    rcpp_result_gen = Rcpp::wrap(multimainfunction(pars, newcombined));
+    return rcpp_result_gen;
+END_RCPP
+}
+// multipartition
+double multipartition(NumericVector pars, NumericMatrix combined, NumericMatrix permutetab);
+RcppExport SEXP _netchain_multipartition(SEXP parsSEXP, SEXP combinedSEXP, SEXP permutetabSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type pars(parsSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type combined(combinedSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type permutetab(permutetabSEXP);
+    rcpp_result_gen = Rcpp::wrap(multipartition(pars, combined, permutetab));
+    return rcpp_result_gen;
+END_RCPP
+}
+// multiloglikechain
+double multiloglikechain(NumericVector pars, List listobservations, NumericMatrix permutetab);
+RcppExport SEXP _netchain_multiloglikechain(SEXP parsSEXP, SEXP listobservationsSEXP, SEXP permutetabSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type pars(parsSEXP);
+    Rcpp::traits::input_parameter< List >::type listobservations(listobservationsSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type permutetab(permutetabSEXP);
+    rcpp_result_gen = Rcpp::wrap(multiloglikechain(pars, listobservations, permutetab));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_netchain_rcpp_hello_world", (DL_FUNC) &_netchain_rcpp_hello_world, 0},
+    {"_netchain_multimainfunction", (DL_FUNC) &_netchain_multimainfunction, 2},
+    {"_netchain_multipartition", (DL_FUNC) &_netchain_multipartition, 3},
+    {"_netchain_multiloglikechain", (DL_FUNC) &_netchain_multiloglikechain, 3},
     {NULL, NULL, 0}
 };
 
