@@ -1,10 +1,10 @@
 ---
-title: "Chain Graph Approximation"
+title: "Estimation of probability associated with collective counterfactual outcomes"
 author: "Youjin Lee"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteIndexEntry{netchain}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -16,50 +16,94 @@ knitr::opts_chunk$set(
 )
 ```
 
-Vignettes are long form documentation commonly included in packages. Because they are part of the distribution of the package, they need to be as compact as possible. The `html_vignette` output type provides a custom style sheet (and tweaks some options) to ensure that the resulting html is as small as possible. The `html_vignette` format:
+## Input observations
 
-- Never uses retina figures
-- Has a smaller default figure size
-- Uses a custom CSS stylesheet instead of the default Twitter Bootstrap style
+To estimate the parameters in conditional log-linear model, we require enough observations to infer parameter values. Observations must contain a $m \times n$ matrix for binary $Y$ and $A$ respectively, where $m$ is the number of units and $n$ is the number of independent observations. Depending on the contexts of your scenario, we can enter no confounders (`listC = NULL`), a $m \times n$ matrix for `listC`, or a list of $m \times n$ matrices for `listC` for which of each matrix stands for observations for one confounding factors (we later call them `C1`, `C2`, ..., `Cq`).
 
-## Vignette Info
+We provide a simple function `simGibbs` to generate binary $(\mathbf{Y}, \mathbf{A}, \mathbf{C})$ from chain graph model under simple scenario, which requires additional structural information (`weight.matrix`, `treat.matrix`, and `cov.matrix`). Consider the following conditional log-linear model following chain graph model defined up-to two-way interaction effects:
 
-Note the various macros within the `vignette` section of the metadata block above. These are required in order to instruct R how to build the vignette. Note that you should change the `title` field and the `\VignetteIndexEntry` to match the title of your vignette.
 
-## Styles
+$$p\big( \mathbf{Y} = (y_{1}, y_{2}, \ldots, y_{m}) \mid \mathbf{A} = \mathbf{a}, \mathbf{C} = \mathbf{c} \big) = \frac{1}{Z} \exp \left\{ \sum\limits_{i,j=1}^{m} w_{ij} y_{i} y_{j} + \sum\limits_{i,j = 1}^{m} k_{ij} a_{i} y_{j} + \sum\limits_{i,j=1}^{m} h_{ij} c_{i} y_{j}   \right\}$$
 
-The `html_vignette` template includes a basic CSS theme. To override this theme you can specify your own CSS in the document metadata as follows:
+A $\mbox{weight.matrix}_{ij}~(w_{ij})$ indicates two-way interaction effects between $Y_{i}$ and $Y_{j}$ when $i\neq j$ and main effect of each outcomes when $i = j$. Note that by the construction of chain graph model, `weight.matrix` should be symmetric. 
+A $\mbox{treat.matrix}_{ij}~(t_{ij})$ indicates a direct causal effect of $A_{i}$ on $Y_{j}$; a $\mbox{cov.matrix}_{ij}~(h_{ij})$ indicates a direct causal effect of $C_{i}$ on $Y_{j}$.
+By the definition, `treat.matrix` and `cov.matrix` are directional. 
 
-    output: 
-      rmarkdown::html_vignette:
-        css: mystyles.css
 
-## Figures
+The following codes generate $n=200$ (`n.obs` = 200) independent observations of $m=3$ (`n.unit` = 3) units assuming chain graph of $Y_{1} -- Y_{2} -- Y_{3}$ and direct effect from $A_{i} \rightarrow Y_{i}$ and $C_{i} \rightarrow Y_{i}$ for $i=1,2,3$.
 
-The figure sizes have been customised so that you can easily put two images side-by-side. 
 
-```{r, fig.show='hold'}
-plot(1:10)
-plot(10:1)
+```{r}
+library(netchain)
+weight.matrix = matrix(c(0.5, 1, 0, 1, 0.3, 0.5, 0, 0.5, -0.5), 3, 3)
+simobs = simGibbs(n.unit = 3, n.obs = 200, 
+                   weight.matrix, treat.matrix = 0.5*diag(3), cov.matrix= (-0.3)*diag(3) )
+inputY = simobs$inputY
+inputA = simobs$inputA
+inputC = simobs$inputC
+head(inputY)
+head(inputA)
+head(inputC)
 ```
 
-You can enable figure captions by `fig_caption: yes` in YAML:
 
-    output:
-      rmarkdown::html_vignette:
-        fig_caption: yes
+## Input edge information
+ 
+With (outcomes, treatment, confounders) = (`inputY`, `inputA`, `listC`), we ultimately aim to calculate probability associated with counterfactual collective outcomes given a certain unit-specific treatment of length $m$, $\mathbf{a}$ (`treatment`):
+$$P\big( \mathbf{Y} ( \mathbf{a} ) = \mathbf{y} \big).$$
 
-Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
+Depending on the form of target outcomes $\mathbf{y}$, `targetoutcome` vary: in the above example of $m = 3$ units, `targetoucome = c(1,0,0)` indicates we want to calculate $P\big( \mathbf{Y}(\mathbf{a}) = c(1,0,0) \big)$. If we want to calculate the probability with multiple outcomes, e.g. homogeneous outcomes of (0,0,0) or (1,1,1), you can input a matrix `targetoutcome = rbind(c(0,0,0), (1,1,1))`. If you want to calculate the probability when only one unit has one, instead of listing all the possible outcomes `targetoutcome = rbind(c(1,0,0), c(0,1,0), c(0,0,1))`, you can specify the number of one (or maximum value of `inputY`): `targetoutcome = 1`.
 
-## More Examples
+Most tricky and important part is edge information (`R.matrix`, `E.matrix`, and `edgeinfo`), which determines the factors put in the conditional log-linear model. 
 
-You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes^[A footnote here.], and tables, e.g. using `knitr::kable()`.
+A `R.matrix` is $m \times m$ relational symmetric matrix where $\mbox{R.matrix}_{ij} = 1$ indicates $Y_{i}$ and $Y_{j}$ are adjacent, meaning the existence of interactions of feedback between the two. A `E.matrix` a $m \times m$ matrix where $\mbox{E.matrix}_{ij}$ indicates $A_{i}$ has a direct causal effect on $Y_{j}$; defaults to diagonal matrix, which indicates no interference. 
+On the other hand, `edgeinfo` a list of matrix specifying additional directed edges (from confounders (specified in `listC`) or treatment (`inputA`) to the outcomes (`inputY`)) information. Assume that `edgeinfo = list(mat1, mat2)` where both `mat1` and `mat2` are matrices. For each matrix the first column specifies the types of variables that must involve outcome variable, `"Y"` while `"A"` indicates treatment variable and `"C"` indicates confounder. If you input multiple confounders in `listC` as a list, `"C1"` indicates the first confounders, `"C2"` indicates the second, and so on. For each matrix the second column specifies an index for unit corresponding to the varaible in the first column. First example, 
+```{r}
+mat1 = rbind(c("Y", 1), c("A", 1), c("A", 2)) 
+```
+implies that $A_{1}$ and $A_{2}$ have a direct causal effect on $Y_{1}$ and these two have a interaction effect; this will lead to three-way interaction term of $Y_{1}$, $A_{1}$, and $A_{2}$ in the log-linear model. (In this case a direct effect of $A_{1}$ on $Y_{1}$ and $A_{2}$ on $Y_{1}$ should be also specified.) 
 
-```{r, echo=FALSE, results='asis'}
-knitr::kable(head(mtcars, 10))
+```{r}
+mat2 = rbind(c("Y", 1), c("C1", 1), c("C2", 1)) 
 ```
 
-Also a quote using `>`:
+When you have multiple confounders and these confounders interactively have an effect on the outcomes, you can put edge information as `mat2`, which implies a direct effect of $C_{11}$ and $C_{21}$ on $Y$ but these effects are dependent each other. (In this case, you should include `rbind(c("Y", 1), c("C1",1))` and `rbind(c("Y", 1), c("C2", 1) )` in `edgeinfo`.) 
 
-> "He who gives up [code] safety for [code] speed deserves neither."
-([via](https://twitter.com/hadleywickham/status/504368538874703872))
+## Counterfactual outcomes
+
+With those observations and edge information, the next step is to infer parameters in the conditiona log-linear models, and with those parameters we generate counterfactual outcomes using Gibbs sampling. Gibbs sampling requires given `treatment` assignment, the number of observations (`n.obs`), and the number of burn-in samples (`n.burn`). 
+
+
+
+```{r}
+set.seed(1234)
+library(netchain)
+weight.matrix = matrix(c(0.5, 1, 0, 1, 0.3, 0.5, 0, 0.5, -0.5), 3, 3)
+simobs = simGibbs(n.unit = 3, n.obs = 200, 
+                   weight.matrix, treat.matrix = 0.5*diag(3), cov.matrix= (-0.3)*diag(3) )
+inputY = simobs$inputY
+inputA = simobs$inputA
+inputC = simobs$inputC
+
+R.matrix = ifelse(weight.matrix==0, 0, 1)      
+
+result = chain.causal.multi(targetoutcome = "mean", treatment = c(1,0,0), inputY, inputA, listC = inputC, R.matrix = R.matrix, E.matrix = diag(3), edgeinfo = list(rbind(c("Y", 1), c("C", 1)), rbind(c("Y", 2), c("C", 2)), rbind(c("Y", 3), c("C", 3))), n.obs = 1000, n.burn = 100)
+
+result
+```
+
+
+## Identifying influential units
+
+A function `causal.influence` takes the same input as `chain.causal.multi` except that a specific `treatment` is replaced by `Avalues` that 
+In `causal.influence` we evaluate the average of collective outcomes under each treatment assignment $E\big[ \mathbf{Y}(\mathbf{a}_j) \big]$ as a measure of influence of unit \code{j}, where \strong{a}_j indicates the sole intervention of unit \code{j}, but `targetoutcome` can be a vector, matrix or an integer as that in `chain.causal.multi`. 
+
+```{r}
+set.seed(1234)
+influence = causal.influence(targetoutcome = "mean", Avalues = c(1,0), 
+                            inputY, inputA, listC = inputC, R.matrix, E.matrix = diag(3), 
+                            edgeinfo = list(rbind(c("Y", 1), c("C", 1)), rbind(c("Y", 2), c("C", 2)), rbind(c("Y", 3), c("C", 3))), n.obs = 1000, n.burn = 100)
+influence
+```
+
+The above result says that $E \big[ \mathbf{Y}(\mathbf{a}_{3} ) \big] \approx 0.75$ achieves the highest influence, indicating that among three, treating unit $i=3$ would result highest average potential outcomes. 

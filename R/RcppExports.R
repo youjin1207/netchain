@@ -9,12 +9,19 @@
 #' 
 #' @param pars a set of parameters
 #' @param newcombined a \code{[(2+nc) x m ]} matrix comprised of outcomes (first row), treatments (second row), and confounders (from the third row), where \code{nc} is the number of confounders.
+#' @param edgeY a matrix of which each row indicates a pair of index for adjacent outcomes.
+#' @param edgeAY a matrix of which each row indicates a index for treatment (first column) and for outcome (second column) on which the treatment has a direct effect.
+#' @param edgeExtra a list of edges of which a list of matrix specifying additional directed edges (from confounders or treatment to the outcomes) information.
+#' 
 #' 
 #' @return a sum of factors.
 #' 
+#' @useDynLib netchain
+#' @importFrom Rcpp sourceCpp
+#' 
 #' @export
-multimainfunction <- function(pars, newcombined) {
-    .Call('_netchain_multimainfunction', PACKAGE = 'netchain', pars, newcombined)
+multimainfunction <- function(pars, newcombined, edgeY, edgeAY, edgeExtra) {
+    .Call('_netchain_multimainfunction', PACKAGE = 'netchain', pars, newcombined, edgeY, edgeAY, edgeExtra)
 }
 
 #' Calculating normalizing constant in conditional log-linear model.
@@ -22,12 +29,17 @@ multimainfunction <- function(pars, newcombined) {
 #' @param pars a set of parameters
 #' @param combined a \code{[(2+nc) x m ]} matrix comprised of outcomes (first row), treatments (second row), and confounders (from the third row), where \code{nc} is the number of confounders.
 #' @param permutetab a matrix comprised of every possible values for outcome in each row. 
-#'
+#' @param edgeY a matrix of which each row indicates a pair of index for adjacent outcomes.
+#' @param edgeAY a matrix of which each row indicates a index for treatment (first column) and for outcome (second column) on which the treatment has a direct effect.
+#' @param edgeExtra a list of edges of which a list of matrix specifying additional directed edges (from confounders or treatment to the outcomes) information.
+#' 
 #' @return a normalizing constant
 #' @export
+#' @useDynLib netchain
+#' @importFrom Rcpp sourceCpp
 #'
-multipartition <- function(pars, combined, permutetab) {
-    .Call('_netchain_multipartition', PACKAGE = 'netchain', pars, combined, permutetab)
+multipartition <- function(pars, combined, permutetab, edgeY, edgeAY, edgeExtra) {
+    .Call('_netchain_multipartition', PACKAGE = 'netchain', pars, combined, permutetab, edgeY, edgeAY, edgeExtra)
 }
 
 #' Derive log-likelihood of conditional log-linear model given parameters.
@@ -35,11 +47,17 @@ multipartition <- function(pars, combined, permutetab) {
 #' @param pars a set of parameters
 #' @param listobservations a collection of \code{[(2+nc) x m ]} matrices comprised of outcomes (first row), treatments (second row), and confounders (from the third row), where \code{nc} is the number of confounders. 
 #' @param permutetab a matrix comprised of every possible values for outcome in each row. 
+#' @param edgeY a matrix of which each row indicates a pair of index for adjacent outcomes.
+#' @param edgeAY a matrix of which each row indicates a index for treatment (first column) and for outcome (second column) on which the treatment has a direct effect.
+#' @param edgeExtra a list of edges of which a list of matrix specifying additional directed edges (from confounders or treatment to the outcomes) information.
 #'
 #' @return log-likelihood of conditional log-linear model given parameters, observations, and edge information.
 #' @export
 #'
-multiloglikechain <- function(pars, listobservations, permutetab) {
-    .Call('_netchain_multiloglikechain', PACKAGE = 'netchain', pars, listobservations, permutetab)
+#' @useDynLib netchain
+#' @importFrom Rcpp sourceCpp
+#'
+multiloglikechain <- function(pars, listobservations, permutetab, edgeY, edgeAY, edgeExtra) {
+    .Call('_netchain_multiloglikechain', PACKAGE = 'netchain', pars, listobservations, permutetab, edgeY, edgeAY, edgeExtra)
 }
 

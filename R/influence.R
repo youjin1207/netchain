@@ -2,26 +2,22 @@
 #' @importFrom Rcpp sourceCpp
 NULL
 
-#' Causal estimation on collective outcomes under multiple confounders and interference.
+#' Identifying causally influential units on social network
 #' 
 #' This function calculates probability associated with counterfactual collective outcome(s)
-#'  P(\strong{Y}(\strong{a}) = \strong{y}) when \code{m} units are subject to interference 
-#' and contagion possibly with the presence of multiple confounders. To estimate the magnitude of 
-#' main effects, two-way interaction effects, or any higher-order interaction effects we use hybrid
-#' graphcial models combining features of both log-linear models on undirected graphs (\code{R.matrix}) 
-#' and directed acyclic graphs (DAGs) models used to represent casual relationships. 
-#' 
-#' 
+#' P(\strong{Y}(\strong{a}_j) = \strong{y}) as a measure of influence of unit \code{j},
+#' where \strong{a}_j indicates the sole intervention of unit \code{j}.
+#'  
 #' 
 #'
-#' @param targetoutcome is a targeted couterfactual outcome of probability is in our interest, having different forms: 
+#' @param targetoutcome is a targeted couterfactual outcome of probability is in our interest, having different forms depending on the context of influence : 
 #' \describe{
 #'    \item{a vector of length \code{m}}{a vector specifies every element of \strong{y}.}
 #'    \item{a \code{[q x m]} matrix}{a collection of \strong{y_1}, \strong{y_2}, ..., \strong{y_q} of which we want to derive the probability.}
 #'    \item{an integer}{the number of 1's in \strong{y} (\eqn{0 \ge & \le m}).}
 #'    \item{'mean'}{when we want derive E(\strong{Y}(\strong{a})) (default).}
 #' }
-#' @param treatment a vector of length \code{m} representing given treatment assignment \strong{a}.
+#' @param Avalues distinct treatment values of which maximum indicates intervention. Defaults to \code{(0,1)}.
 #' @param inputY a \code{[n x m]} matrix of \code{n} independent outcomes for \code{m} units.
 #' @param inputA a \code{[n x m]} matrix of \code{n} independent treatment assignments assigned to \code{m} units.
 #' @param listC is either a matrix, list or \code{NULL}:
@@ -41,9 +37,11 @@ NULL
 #' @param n.burn the number of burn-in sample in Gibbs sampling.
 #'
 #' @return returns \code{"noconvergence"} in case of failure to converence or a list with components :
-#' \item{\code{causalprob}}{the estimated probability P(\strong{Y}(\strong{a}) = \strong{y}).}
+#' \item{\code{influence}}{}
 #' \item{\code{n.par}}{the number of parameters estimated in conditional log-linear model.}
 #' \item{\code{par.est}}{the estimated parameters.}
+#' 
+#' @export 
 #' 
 #' @author Youjin Lee
 #' 
@@ -51,7 +49,6 @@ NULL
 #' @importFrom gtools permutations
 #' @importFrom stringr str_extract
 #' 
-#' @export 
 #'
 #' @examples
 #' library(netchain)
@@ -64,14 +61,14 @@ NULL
 #' inputA = simobs$inputA   
 #' inputC = simobs$inputC 
 #' R.matrix = ifelse(weight.matrix==0, 0, 1)      
-#' result = chain.causal.multi(targetoutcome = "mean", treatment = c(1,0,0), 
+#' result = influence.causal(targetoutcome = "mean", Avalues = c(1,0), 
 #'                            inputY, inputA, listC = inputC, R.matrix, E.matrix = diag(3), 
 #'                            edgeinfo = list(rbind(c("Y", 1), c("C", 1)), rbind(c("Y", 2), c("C", 2)), rbind(c("Y", 3), c("C", 3))), 
 #'                            n.obs = 1000, n.burn = 100)
 #' 
 #' 
 #' 
-chain.causal.multi = function(targetoutcome = "mean", treatment, inputY, inputA, listC, R.matrix, E.matrix, edgeinfo = NULL, 
+causal.influence = function(targetoutcome = "mean", Avalues, inputY, inputA, listC, R.matrix, E.matrix, edgeinfo = NULL, 
                               n.obs = 1000, n.burn = 100){
   
   allobservations = list()
@@ -118,13 +115,13 @@ chain.causal.multi = function(targetoutcome = "mean", treatment, inputY, inputA,
   edgeAY[which(edgeAY[,1] == 0), 1] = nrow(E.matrix)
   if(class(edgeAY) == "numeric") edgeAY = t(as.matrix(edgeAY))
   colnames(edgeAY) = c("A", "Y")
-
+  
   ## define n.par and par.est ##
   n.par = ncol(inputY) + nrow(edgeY) + nrow(edgeAY) + length(edgeExtra)
   permutetab = permutations(n=length(unique(as.numeric(inputY))), r=ncol(inputY), unique(as.numeric(inputY)), repeats.allowed=T)
   
   par.est = try(optim(par = rep(0, n.par), multiloglikechain, listobservations = allobservations,
-                      permutetab = permutetab, edgeY = edgeY,
+                      permutetab = permutetab,  edgeY = edgeY,
                       edgeAY = edgeAY, edgeExtra = edgeExtra,
                       control = list(fnscale = -1), method = "L-BFGS-B")$par,
                 silent = TRUE)
@@ -162,28 +159,35 @@ chain.causal.multi = function(targetoutcome = "mean", treatment, inputY, inputA,
   
   
   ## g-formula under the existence of confounders
-  targets = 0
-  for(i in 1:length(allobservations)){
-    if(nrow(allobservations[[1]]) > 2){
-      covariates = allobservations[[i]][3:nrow(allobservations[[i]]),]
-    }else{
-      covariates = NULL
-    }
-    outcomes =  chaingibbs(pars = par.est, n.obs = 500, treatment, covariates, initprob = 0.5, yvalues = c(0,1), Neighborind, Neighborpar,
-                           n.burn = 100)
-    if(class(targetoutcome) == "numeric" & length(targetoutcome) == ncol(inputY)){
-      targets = targets + mean(rowMeans(outcomes == targetoutcome) == 1 ) / length(allobservations)
-    }else if(class(targetoutcome) == "matrix" ){
-      for(jj in 1:nrow(targetoutcome)){
-        targets = targets +  mean(rowMeans(outcomes == targetoutcome[jj,]) == 1 ) / length(allobservations)
+  ## Avalues = c(1,0)
+  treatments = matrix(min(Avalues), nrow = ncol(inputY), ncol = ncol(inputY))
+  diag(treatments) = max(Avalues)
+  
+  targets = rep(0, nrow(treatments))
+  for(k in 1:length(targets)){
+    for(i in 1:length(allobservations)){
+      if(nrow(allobservations[[1]]) > 2){
+        covariates = allobservations[[i]][3:nrow(allobservations[[i]]),]
+      }else{
+        covariates = NULL
       }
-    }else if(class(targetoutcome) == "numeric" & length(targetoutcome) == 1){
-      targets = targets +  mean(rowSums(outcomes == max(yvalues)) == targetoutcome ) / length(allobservations)
-    }else{
-      targets = targets + mean(rowMeans(outcomes == max(yvalues))) / length(allobservations)
+      outcomes =  chaingibbs(pars = par.est, n.obs = 500, treatment = treatments[k,], covariates, initprob = 0.5, yvalues, Neighborind, Neighborpar,
+                             n.burn = 100)
+      if(class(targetoutcome) == "numeric" & length(targetoutcome) == ncol(inputY)){
+        targets[k] = targets[k] + mean(rowMeans(outcomes == targetoutcome) == 1 ) / length(allobservations)
+      }else if(class(targetoutcome) == "matrix" ){
+        for(jj in 1:nrow(targetoutcome)){
+          targets[k] = targets[k] +  mean(rowMeans(outcomes == targetoutcome[jj,]) == 1 ) / length(allobservations)
+        }
+      }else if(class(targetoutcome) == "numeric" & length(targetoutcome) == 1){
+        targets[k] = targets[k] +  mean(rowSums(outcomes == max(yvalues)) == targetoutcome ) / length(allobservations)
+      }else{
+        targets[k] = targets[k] + mean(rowMeans(outcomes == max(yvalues))) / length(allobservations)
+      }
     }
   }
-  return(list(causalprob = targets, n.par = n.par, par.est = par.est))
+  
+  return(list(influence = targets, n.par = n.par, par.est = par.est))
 }
 
 

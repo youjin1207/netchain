@@ -6,48 +6,57 @@
 using namespace Rcpp;
 
 // multimainfunction
-double multimainfunction(NumericVector pars, NumericMatrix newcombined);
-RcppExport SEXP _netchain_multimainfunction(SEXP parsSEXP, SEXP newcombinedSEXP) {
+double multimainfunction(NumericVector pars, NumericMatrix newcombined, NumericMatrix edgeY, NumericMatrix edgeAY, List edgeExtra);
+RcppExport SEXP _netchain_multimainfunction(SEXP parsSEXP, SEXP newcombinedSEXP, SEXP edgeYSEXP, SEXP edgeAYSEXP, SEXP edgeExtraSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericVector >::type pars(parsSEXP);
     Rcpp::traits::input_parameter< NumericMatrix >::type newcombined(newcombinedSEXP);
-    rcpp_result_gen = Rcpp::wrap(multimainfunction(pars, newcombined));
+    Rcpp::traits::input_parameter< NumericMatrix >::type edgeY(edgeYSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type edgeAY(edgeAYSEXP);
+    Rcpp::traits::input_parameter< List >::type edgeExtra(edgeExtraSEXP);
+    rcpp_result_gen = Rcpp::wrap(multimainfunction(pars, newcombined, edgeY, edgeAY, edgeExtra));
     return rcpp_result_gen;
 END_RCPP
 }
 // multipartition
-double multipartition(NumericVector pars, NumericMatrix combined, NumericMatrix permutetab);
-RcppExport SEXP _netchain_multipartition(SEXP parsSEXP, SEXP combinedSEXP, SEXP permutetabSEXP) {
+double multipartition(NumericVector pars, NumericMatrix combined, NumericMatrix permutetab, NumericMatrix edgeY, NumericMatrix edgeAY, List edgeExtra);
+RcppExport SEXP _netchain_multipartition(SEXP parsSEXP, SEXP combinedSEXP, SEXP permutetabSEXP, SEXP edgeYSEXP, SEXP edgeAYSEXP, SEXP edgeExtraSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericVector >::type pars(parsSEXP);
     Rcpp::traits::input_parameter< NumericMatrix >::type combined(combinedSEXP);
     Rcpp::traits::input_parameter< NumericMatrix >::type permutetab(permutetabSEXP);
-    rcpp_result_gen = Rcpp::wrap(multipartition(pars, combined, permutetab));
+    Rcpp::traits::input_parameter< NumericMatrix >::type edgeY(edgeYSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type edgeAY(edgeAYSEXP);
+    Rcpp::traits::input_parameter< List >::type edgeExtra(edgeExtraSEXP);
+    rcpp_result_gen = Rcpp::wrap(multipartition(pars, combined, permutetab, edgeY, edgeAY, edgeExtra));
     return rcpp_result_gen;
 END_RCPP
 }
 // multiloglikechain
-double multiloglikechain(NumericVector pars, List listobservations, NumericMatrix permutetab);
-RcppExport SEXP _netchain_multiloglikechain(SEXP parsSEXP, SEXP listobservationsSEXP, SEXP permutetabSEXP) {
+double multiloglikechain(NumericVector pars, List listobservations, NumericMatrix permutetab, NumericMatrix edgeY, NumericMatrix edgeAY, List edgeExtra);
+RcppExport SEXP _netchain_multiloglikechain(SEXP parsSEXP, SEXP listobservationsSEXP, SEXP permutetabSEXP, SEXP edgeYSEXP, SEXP edgeAYSEXP, SEXP edgeExtraSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericVector >::type pars(parsSEXP);
     Rcpp::traits::input_parameter< List >::type listobservations(listobservationsSEXP);
     Rcpp::traits::input_parameter< NumericMatrix >::type permutetab(permutetabSEXP);
-    rcpp_result_gen = Rcpp::wrap(multiloglikechain(pars, listobservations, permutetab));
+    Rcpp::traits::input_parameter< NumericMatrix >::type edgeY(edgeYSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type edgeAY(edgeAYSEXP);
+    Rcpp::traits::input_parameter< List >::type edgeExtra(edgeExtraSEXP);
+    rcpp_result_gen = Rcpp::wrap(multiloglikechain(pars, listobservations, permutetab, edgeY, edgeAY, edgeExtra));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_netchain_multimainfunction", (DL_FUNC) &_netchain_multimainfunction, 2},
-    {"_netchain_multipartition", (DL_FUNC) &_netchain_multipartition, 3},
-    {"_netchain_multiloglikechain", (DL_FUNC) &_netchain_multiloglikechain, 3},
+    {"_netchain_multimainfunction", (DL_FUNC) &_netchain_multimainfunction, 5},
+    {"_netchain_multipartition", (DL_FUNC) &_netchain_multipartition, 6},
+    {"_netchain_multiloglikechain", (DL_FUNC) &_netchain_multiloglikechain, 6},
     {NULL, NULL, 0}
 };
 

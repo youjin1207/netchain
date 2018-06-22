@@ -10,18 +10,23 @@ using namespace Rcpp;
 //' 
 //' @param pars a set of parameters
 //' @param newcombined a \code{[(2+nc) x m ]} matrix comprised of outcomes (first row), treatments (second row), and confounders (from the third row), where \code{nc} is the number of confounders.
+//' @param edgeY a matrix of which each row indicates a pair of index for adjacent outcomes.
+//' @param edgeAY a matrix of which each row indicates a index for treatment (first column) and for outcome (second column) on which the treatment has a direct effect.
+//' @param edgeExtra a list of edges of which a list of matrix specifying additional directed edges (from confounders or treatment to the outcomes) information.
+//' 
 //' 
 //' @return a sum of factors.
 //' 
+//' @useDynLib netchain
+//' @importFrom Rcpp sourceCpp
+//' 
 //' @export
 // [[Rcpp::export]]
-double multimainfunction(NumericVector pars, NumericMatrix newcombined){
+double multimainfunction(NumericVector pars, NumericMatrix newcombined,
+                         NumericMatrix edgeY,
+                         NumericMatrix edgeAY, List edgeExtra){
   
-  Environment env = Environment::global_env();
-  NumericMatrix edgeY = env["edgeY"];
-  NumericMatrix edgeAY = env["edgeAY"];
-  List edgeExtra = env["edgeExtra"];
-  
+
   IntegerVector lengthY = seq(1, newcombined.ncol());
   NumericVector Y = newcombined.row(0);
   NumericVector A = newcombined.row(1);
@@ -51,24 +56,26 @@ double multimainfunction(NumericVector pars, NumericMatrix newcombined){
 //' @param pars a set of parameters
 //' @param combined a \code{[(2+nc) x m ]} matrix comprised of outcomes (first row), treatments (second row), and confounders (from the third row), where \code{nc} is the number of confounders.
 //' @param permutetab a matrix comprised of every possible values for outcome in each row. 
-//'
+//' @param edgeY a matrix of which each row indicates a pair of index for adjacent outcomes.
+//' @param edgeAY a matrix of which each row indicates a index for treatment (first column) and for outcome (second column) on which the treatment has a direct effect.
+//' @param edgeExtra a list of edges of which a list of matrix specifying additional directed edges (from confounders or treatment to the outcomes) information.
+//' 
 //' @return a normalizing constant
 //' @export
+//' @useDynLib netchain
+//' @importFrom Rcpp sourceCpp
 //'
 //[[Rcpp::export]]
 double multipartition(NumericVector pars, NumericMatrix combined,
-                      NumericMatrix permutetab){
+                      NumericMatrix permutetab, NumericMatrix edgeY,
+                      NumericMatrix edgeAY, List edgeExtra){
   
-  Environment env = Environment::global_env();
-  NumericMatrix edgeY = env["edgeY"];
-  NumericMatrix edgeAY = env["edgeAY"];
-  List edgeExtra = env["edgeExtra"];
   
   double part = 0;
   for(int p=0; p < permutetab.nrow(); ++p){
     NumericMatrix dummyobs = clone(combined);
     dummyobs.row(0) = permutetab.row(p);
-    part += exp(multimainfunction(pars, dummyobs));
+    part += exp(multimainfunction(pars, dummyobs, edgeY, edgeAY, edgeExtra));
   }
   return(part);
 }
@@ -79,26 +86,29 @@ double multipartition(NumericVector pars, NumericMatrix combined,
 //' @param pars a set of parameters
 //' @param listobservations a collection of \code{[(2+nc) x m ]} matrices comprised of outcomes (first row), treatments (second row), and confounders (from the third row), where \code{nc} is the number of confounders. 
 //' @param permutetab a matrix comprised of every possible values for outcome in each row. 
+//' @param edgeY a matrix of which each row indicates a pair of index for adjacent outcomes.
+//' @param edgeAY a matrix of which each row indicates a index for treatment (first column) and for outcome (second column) on which the treatment has a direct effect.
+//' @param edgeExtra a list of edges of which a list of matrix specifying additional directed edges (from confounders or treatment to the outcomes) information.
 //'
 //' @return log-likelihood of conditional log-linear model given parameters, observations, and edge information.
 //' @export
 //'
+//' @useDynLib netchain
+//' @importFrom Rcpp sourceCpp
+//'
 //[[Rcpp::export]]
 double multiloglikechain(NumericVector pars, List listobservations,
-                         NumericMatrix permutetab){
+                         NumericMatrix permutetab, NumericMatrix edgeY,
+                         NumericMatrix edgeAY, List edgeExtra){
   
-  Environment env = Environment::global_env();
-  NumericMatrix edgeY = env["edgeY"];
-  NumericMatrix edgeAY = env["edgeAY"];
-  List edgeExtra = env["edgeExtra"];
   
   double whole = 0;
   double Zpart = 0;
   
   for(int ii=0; ii < listobservations.size(); ++ii){
     NumericMatrix tmpmatrix = listobservations[ii];
-    whole += multimainfunction(pars, tmpmatrix);
-    Zpart += log(multipartition(pars, tmpmatrix, permutetab));
+    whole += multimainfunction(pars, tmpmatrix, edgeY, edgeAY, edgeExtra);
+    Zpart += log(multipartition(pars, tmpmatrix, permutetab, edgeY, edgeAY, edgeExtra));
   }
   
   double loglike = whole - Zpart;
