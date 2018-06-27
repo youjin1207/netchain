@@ -1,7 +1,8 @@
 #' Generate binary (\strong{Y}, \strong{A}, \strong{C}) from chain graph model under simplest scenario. 
 #'
 #' @param n.unit the number of units (\code{m}).
-#' @param n.obs the number of independent observations (\code{n}).
+#' @param n.gibbs the number of independent Gibbs sampler.
+#' @param n.sample the number of samples from each Gibbs sampling (\code{n} = \code{n.gibbs} x \code{n.sample}). 
 #' @param weight.matrix a \code{[m x m]} symmetric relational matrix where \eqn{W_ij = 1} indicates the existence of undirected edges between \eqn{Y_i} and \eqn{Y_j} and its magnitude. Here \eqn{W_ii} represents the main effect of \eqn{Y_i}.  
 #' @param treat.matrix a \code{[m x m]} matrix where \eqn{treat.matrix_ij} indicates the magnitude of direct effect from \eqn{A_i} to \eqn{Y_j}.
 #' @param cov.matrix a \code{[m x m]} matrix where \eqn{treat.matrix_ij} indicates the magnitude of direct effect from \eqn{C_i} to \eqn{Y_j}.
@@ -20,7 +21,7 @@
 #' @examples
 #' library(netchain)
 #' weight.matrix = matrix(c(0.5, 1, 0, 1, 0.3, 0.5, 0, 0.5, -0.5), 3, 3)
-#' simobs = simGibbs(n.unit = 3, n.obs = 200, 
+#' simobs = simGibbs(n.unit = 3, n.gibbs = 200, n.sample = 10, 
 #'                   weight.matrix,
 #'                   treat.matrix = 0.5*diag(3), cov.matrix= (-0.3)*diag(3) )
 #' result = simobs
@@ -28,41 +29,38 @@
 #' inputA = result$inputA
 #' inputC = result$inputC
 #' 
-simGibbs = function(n.unit, n.obs, 
+simGibbs = function(n.unit, n.gibbs, n.sample, 
                     weight.matrix, treat.matrix, cov.matrix,
                     init.prob = 0.5, treat.prob = 0.5, cov.prob = 0.5, 
                     n.burn = 100){
+  inputY = inputA = inputC = c()
   
-  n.iter = n.burn + n.obs
-  treatment = cov = outcome = matrix(0, n.iter, n.unit)
-  t = 1
-  treatment[t,] = rbinom(n.unit, 1, init.prob)
-  cov[t,] = rbinom(n.unit, 1, init.prob)
-  outcome[t,]  = rbinom(n.unit, 1, init.prob)
-  
-  for(t in 2:n.iter){
-    random.ind = sample(1:n.unit, 1)
-    # from previous time
-    treatment[t,] = treatment[t-1, ] 
-    cov[t,] = cov[t-1,]
-    outcome[t,] = outcome[t-1,]
-    # update new treatment and covariate
-    cov[t,random.ind] = rbinom(1,1,cov.prob)
-    treatment[t,random.ind] = rbinom(1,1,treat.prob)
-    
-    for(i in 1:n.unit){
-      if(random.ind == i){
-        out =  sum(outcome[t-1,]*weight.matrix[i,]) +
-          sum(treatment[t-1,]*treat.matrix[,i]) +
-          sum(cov[t-1,]*cov.matrix[i,]) 
+  for(r in 1:n.gibbs){
+    n.iter = n.burn + n.sample
+    outcome = matrix(0, n.iter, n.unit)
+    t = 1
+    treatment = rbinom(n.unit, 1, init.prob)
+    cov = rbinom(n.unit, 1, init.prob)
+    outcome[t,]  = rbinom(n.unit, 1, init.prob)
+    for(t in 2:n.iter){
+      random.ind = sample(1:n.unit, 1)
+      # from previous time
+      outcome[t,] = outcome[t-1,]
+      
+      for(i in 1:n.unit){
+        if(random.ind == i){
+          out =  sum(outcome[t-1,]*weight.matrix[i,]) +
+            sum(treatment*treat.matrix[,i]) +
+            sum(cov*cov.matrix[i,]) 
+        }
       }
+      outcome[t, random.ind] = rbinom(1,1, exp(out) / (1 + exp(out)))
     }
-    outcome[t, random.ind] = rbinom(1,1, exp(out) / (1 + exp(out)))
+    
+    inputY = rbind(inputY, outcome[c((n.burn+1):n.iter),])
+    inputA = rbind(inputA, t(matrix(rep(treatment, n.sample), n.unit, n.sample)))
+    inputC = rbind(inputC, t(matrix(rep(cov, n.sample), n.unit, n.sample)))
   }
-  
-  inputY = outcome[c((n.burn+1):n.iter), ]
-  inputA = treatment[c((n.burn+1):n.iter), ]
-  inputC = cov[c((n.burn+1):n.iter), ]
   
   return(list(inputY = inputY, inputA = inputA, inputC = inputC))
   

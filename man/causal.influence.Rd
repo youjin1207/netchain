@@ -58,7 +58,7 @@ where \strong{a}_j indicates the sole intervention of unit \code{j}.
 library(netchain)
 set.seed(1234)
 weight.matrix = matrix(c(0.5, 1, 0, 1, 0.3, 0.5, 0, 0.5, -0.5), 3, 3)
-simobs = simGibbs(n.unit = 3, n.obs = 200, 
+simobs = simGibbs(n.unit = 3, n.gibbs = 200, n.sample = 10, 
                   weight.matrix,
                   treat.matrix = 0.5*diag(3), cov.matrix= (-0.3)*diag(3) )
 inputY = simobs$inputY                   

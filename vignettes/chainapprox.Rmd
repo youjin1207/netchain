@@ -30,14 +30,15 @@ A $\mbox{treat.matrix}_{ij}~(t_{ij})$ indicates a direct causal effect of $A_{i}
 By the definition, `treat.matrix` and `cov.matrix` are directional. 
 
 
-The following codes generate $n=200$ (`n.obs` = 200) independent observations of $m=3$ (`n.unit` = 3) units assuming chain graph of $Y_{1} -- Y_{2} -- Y_{3}$ and direct effect from $A_{i} \rightarrow Y_{i}$ and $C_{i} \rightarrow Y_{i}$ for $i=1,2,3$.
+The following codes generate $n=1000$ (`n.gibbs`$\times$`n.sample` = 500) observations of $m=3$ (`n.unit` = 3) units assuming chain graph of $Y_{1} -- Y_{2} -- Y_{3}$ and direct effect from $A_{i} \rightarrow Y_{i}$ and $C_{i} \rightarrow Y_{i}$ for $i=1,2,3$.
 
 
 ```{r}
 library(netchain)
 weight.matrix = matrix(c(0.5, 1, 0, 1, 0.3, 0.5, 0, 0.5, -0.5), 3, 3)
-simobs = simGibbs(n.unit = 3, n.obs = 200, 
-                   weight.matrix, treat.matrix = 0.5*diag(3), cov.matrix= (-0.3)*diag(3) )
+simobs = simGibbs(n.unit = 3, n.gibbs = 100, n.sample = 10, 
+                   weight.matrix,
+                   treat.matrix = 0.5*diag(3), cov.matrix= (-0.3)*diag(3) )
 inputY = simobs$inputY
 inputA = simobs$inputA
 inputC = simobs$inputC
@@ -71,7 +72,7 @@ When you have multiple confounders and these confounders interactively have an e
 
 ## Counterfactual outcomes
 
-With those observations and edge information, the next step is to infer parameters in the conditiona log-linear models, and with those parameters we generate counterfactual outcomes using Gibbs sampling. Gibbs sampling requires given `treatment` assignment, the number of observations (`n.obs`), and the number of burn-in samples (`n.burn`). 
+With those observations and edge information, the next step is to infer parameters in the conditiona log-linear models, and with those parameters we generate counterfactual outcomes using Gibbs sampling. Gibbs sampling requires given `treatment` assignment, the number of independent Gibbs samplings (`n.gibbs`), the number of samples per each iteration (`n.sample`), and the number of burn-in samples (`n.burn`) per each iteration. 
 
 
 
@@ -79,8 +80,9 @@ With those observations and edge information, the next step is to infer paramete
 set.seed(1234)
 library(netchain)
 weight.matrix = matrix(c(0.5, 1, 0, 1, 0.3, 0.5, 0, 0.5, -0.5), 3, 3)
-simobs = simGibbs(n.unit = 3, n.obs = 200, 
-                   weight.matrix, treat.matrix = 0.5*diag(3), cov.matrix= (-0.3)*diag(3) )
+simobs = simGibbs(n.unit = 3, n.gibbs = 100, n.sample = 10, 
+                   weight.matrix,
+                   treat.matrix = 0.5*diag(3), cov.matrix= (-0.3)*diag(3) )
 inputY = simobs$inputY
 inputA = simobs$inputA
 inputC = simobs$inputC
@@ -106,4 +108,4 @@ influence = causal.influence(targetoutcome = "mean", Avalues = c(1,0),
 influence
 ```
 
-The above result says that $E \big[ \mathbf{Y}(\mathbf{a}_{3} ) \big] \approx 0.75$ achieves the highest influence, indicating that among three, treating unit $i=3$ would result highest average potential outcomes. 
+The above result says that $E \big[ \mathbf{Y}(\mathbf{a}_{2} ) \big] \approx 0.71$ achieves the highest influence, indicating that among three, treating unit $i=3$ would result highest average potential outcomes. 

@@ -4,13 +4,15 @@
 \alias{simGibbs}
 \title{Generate binary (\strong{Y}, \strong{A}, \strong{C}) from chain graph model under simplest scenario.}
 \usage{
-simGibbs(n.unit, n.obs, weight.matrix, treat.matrix, cov.matrix,
+simGibbs(n.unit, n.gibbs, n.sample, weight.matrix, treat.matrix, cov.matrix,
   init.prob = 0.5, treat.prob = 0.5, cov.prob = 0.5, n.burn = 100)
 }
 \arguments{
 \item{n.unit}{the number of units (\code{m}).}
 
-\item{n.obs}{the number of independent observations (\code{n}).}
+\item{n.gibbs}{the number of independent Gibbs sampler.}
+
+\item{n.sample}{the number of samples from each Gibbs sampling (\code{n} = \code{n.gibbs} x \code{n.sample}).}
 
 \item{weight.matrix}{a \code{[m x m]} symmetric relational matrix where \eqn{W_ij = 1} indicates the existence of undirected edges between \eqn{Y_i} and \eqn{Y_j} and its magnitude. Here \eqn{W_ii} represents the main effect of \eqn{Y_i}.}
 
@@ -38,7 +40,7 @@ Generate binary (\strong{Y}, \strong{A}, \strong{C}) from chain graph model unde
 \examples{
 library(netchain)
 weight.matrix = matrix(c(0.5, 1, 0, 1, 0.3, 0.5, 0, 0.5, -0.5), 3, 3)
-simobs = simGibbs(n.unit = 3, n.obs = 200, 
+simobs = simGibbs(n.unit = 3, n.gibbs = 200, n.sample = 10, 
                   weight.matrix,
                   treat.matrix = 0.5*diag(3), cov.matrix= (-0.3)*diag(3) )
 result = simobs
