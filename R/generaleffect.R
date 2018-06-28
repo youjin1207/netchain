@@ -1,7 +1,3 @@
-#' @useDynLib netchain
-#' @importFrom Rcpp sourceCpp
-NULL
-
 #' Causal estimation on collective outcomes under multiple confounders and interference.
 #' 
 #' This function calculates probability associated with counterfactual collective outcome(s)
@@ -47,7 +43,7 @@ NULL
 #' 
 #' @author Youjin Lee
 #' 
-#' 
+#' @importFrom Rcpp sourceCpp
 #' @importFrom gtools permutations
 #' @importFrom stringr str_extract
 #' @importFrom stats optim 
