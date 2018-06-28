@@ -48,23 +48,25 @@ NULL
 #' 
 #' @importFrom gtools permutations
 #' @importFrom stringr str_extract
+#' @importFrom stats optim 
+#' @importFrom stats rbinom
 #' 
 #'
 #' @examples
 #' library(netchain)
 #' set.seed(1234)
 #' weight.matrix = matrix(c(0.5, 1, 0, 1, 0.3, 0.5, 0, 0.5, -0.5), 3, 3)
-#' simobs = simGibbs(n.unit = 3, n.gibbs = 200, n.sample = 10, 
+#' simobs = simGibbs(n.unit = 3, n.gibbs = 100, n.sample = 10, 
 #'                   weight.matrix,
 #'                   treat.matrix = 0.5*diag(3), cov.matrix= (-0.3)*diag(3) )
 #' inputY = simobs$inputY                   
 #' inputA = simobs$inputA   
 #' inputC = simobs$inputC 
-#' R.matrix = ifelse(weight.matrix==0, 0, 1)      
-#' result = influence.causal(targetoutcome = "mean", Avalues = c(1,0), 
-#'                            inputY, inputA, listC = inputC, R.matrix, E.matrix = diag(3), 
-#'                            edgeinfo = list(rbind(c("Y", 1), c("C", 1)), rbind(c("Y", 2), c("C", 2)), rbind(c("Y", 3), c("C", 3))), 
-#'                            n.obs = 1000, n.burn = 100)
+#' R.matrix = ifelse(weight.matrix==0, 0, 1)
+#' diag(R.matrix) = 0
+#' edgeinfo = list(rbind(c("Y", 1), c("C", 1)), rbind(c("Y", 2), c("C", 2)), rbind(c("Y", 3), c("C", 3)))      
+#' result = causal.influence(targetoutcome = "mean", Avalues = c(1,0), inputY, inputA, 
+#' listC = inputC, R.matrix, E.matrix = diag(3), edgeinfo = edgeinfo)
 #' 
 #' 
 #' 
