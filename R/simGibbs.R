@@ -24,15 +24,14 @@
 #' simobs = simGibbs(n.unit = 3, n.gibbs = 200, n.sample = 10, 
 #'                   weight.matrix,
 #'                   treat.matrix = 0.5*diag(3), cov.matrix= (-0.3)*diag(3) )
-#' result = simobs
-#' inputY = result$inputY
-#' inputA = result$inputA
-#' inputC = result$inputC
+#' inputY = simobs$inputY
+#' inputA = simobs$inputA
+#' inputC = simobs$inputC
 #' 
 simGibbs = function(n.unit, n.gibbs, n.sample, 
                     weight.matrix, treat.matrix, cov.matrix,
                     init.prob = 0.5, treat.prob = 0.5, cov.prob = 0.5, 
-                    n.burn = 100){
+                    n.burn = 100, yvalues = c(1,0)){
   inputY = inputA = inputC = c()
   
   for(r in 1:n.gibbs){
@@ -42,6 +41,7 @@ simGibbs = function(n.unit, n.gibbs, n.sample,
     treatment = rbinom(n.unit, 1, init.prob)
     cov = rbinom(n.unit, 1, init.prob)
     outcome[t,]  = rbinom(n.unit, 1, init.prob)
+    outcome[t,] = ifelse(outcome[t,] == 1, max(yvalues), min(yvalues))
     for(t in 2:n.iter){
       random.ind = sample(1:n.unit, 1)
       # from previous time
@@ -49,12 +49,13 @@ simGibbs = function(n.unit, n.gibbs, n.sample,
       
       for(i in 1:n.unit){
         if(random.ind == i){
-          out =  sum(outcome[t-1,]*weight.matrix[i,]) +
+          out = diag(weight.matrix)[i] +  sum(outcome[t-1,-i]*weight.matrix[i,-i]) +
             sum(treatment*treat.matrix[,i]) +
             sum(cov*cov.matrix[i,]) 
         }
       }
       outcome[t, random.ind] = rbinom(1,1, exp(out) / (1 + exp(out)))
+      outcome[t, random.ind] = ifelse(outcome[t, random.ind] == 1, max(yvalues), min(yvalues))
     }
     
     inputY = rbind(inputY, outcome[c((n.burn+1):n.iter),])
