@@ -60,7 +60,8 @@
 #' inputC = simobs$inputC 
 #' R.matrix = ifelse(weight.matrix==0, 0, 1)
 #' diag(R.matrix) = 0
-#' edgeinfo = list(rbind(c("Y", 1), c("C", 1)), rbind(c("Y", 2), c("C", 2)), rbind(c("Y", 3), c("C", 3)))      
+#' edgeinfo = list(rbind(c("Y", 1), c("C", 1)), rbind(c("Y", 2), c("C", 2)), 
+#'            rbind(c("Y", 3), c("C", 3)))      
 #' result = causal.influence(targetoutcome = "mean", Avalues = c(1,0), inputY, inputA, 
 #' listC = inputC, R.matrix, E.matrix = diag(3), edgeinfo = edgeinfo)
 #' 

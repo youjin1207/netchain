@@ -10,6 +10,7 @@
 #' @param treat.prob a probability updating \strong{A} in Gibbs sampling procedure.
 #' @param cov.prob a probability updating \strong{C} in Gibbs sampling procedure. 
 #' @param n.burn the number of burn-in sample in Gibbs sampling (\eqn{\ge} \code{n.obs}). 
+#' @param yvalues a vector of distinct binary outcome values. Defaults to \code{c(0,1)}.
 #'
 #' @return a list of \code{[n.obs]} independent observations:
 #' \item{\code{inputY}}{a \code{[n.obs x m]} matrix for outcomes.}

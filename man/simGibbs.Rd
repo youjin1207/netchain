@@ -5,7 +5,8 @@
 \title{Generate binary (\strong{Y}, \strong{A}, \strong{C}) from chain graph model under simplest scenario.}
 \usage{
 simGibbs(n.unit, n.gibbs, n.sample, weight.matrix, treat.matrix, cov.matrix,
-  init.prob = 0.5, treat.prob = 0.5, cov.prob = 0.5, n.burn = 100)
+  init.prob = 0.5, treat.prob = 0.5, cov.prob = 0.5, n.burn = 100,
+  yvalues = c(1, 0))
 }
 \arguments{
 \item{n.unit}{the number of units (\code{m}).}
@@ -27,6 +28,8 @@ simGibbs(n.unit, n.gibbs, n.sample, weight.matrix, treat.matrix, cov.matrix,
 \item{cov.prob}{a probability updating \strong{C} in Gibbs sampling procedure.}
 
 \item{n.burn}{the number of burn-in sample in Gibbs sampling (\eqn{\ge} \code{n.obs}).}
+
+\item{yvalues}{a vector of distinct binary outcome values. Defaults to \code{c(0,1)}.}
 }
 \value{
 a list of \code{[n.obs]} independent observations:
@@ -43,9 +46,8 @@ weight.matrix = matrix(c(0.5, 1, 0, 1, 0.3, 0.5, 0, 0.5, -0.5), 3, 3)
 simobs = simGibbs(n.unit = 3, n.gibbs = 200, n.sample = 10, 
                   weight.matrix,
                   treat.matrix = 0.5*diag(3), cov.matrix= (-0.3)*diag(3) )
-result = simobs
-inputY = result$inputY
-inputA = result$inputA
-inputC = result$inputC
+inputY = simobs$inputY
+inputA = simobs$inputA
+inputC = simobs$inputC
 
 }

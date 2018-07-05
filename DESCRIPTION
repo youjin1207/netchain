@@ -1,9 +1,9 @@
 Package: netchain
 Type: Package
-Title: Inferring Causal Effects on Collective Outcomes under Interference.
+Title: Inferring Causal Effects on Collective Outcomes under Interference
 Version: 1.0
 Date: 2018-06-14
-Author: c( person("Elizabeth", "Ogburn", role="aut",
+Author: c(person("Elizabeth", "Ogburn", role="aut",
 	   	        email="eogburn@jhu.edu"),
           person("Ilya", "Shpitser", role = c("aut", "cre"),
 	   	    email = "ilyas@cs.jhu.edu"),

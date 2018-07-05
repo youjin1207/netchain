@@ -1,5 +1,4 @@
 \name{netchain-package}
-\alias{netchain-package}
 \alias{netchain}
 \docType{package}
 \title{
@@ -16,9 +15,7 @@ Youjin Lee
 
 Maintainer: Youjin Lee <ylee160@jhu.edu>
 }
-\references{
-  
-}
+
 \keyword{ package }
 \seealso{
   \url{https://github.com/youjin1207/netchain}
