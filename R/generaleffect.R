@@ -55,7 +55,7 @@
 #' library(netchain)
 #' set.seed(1234)
 #' weight.matrix = matrix(c(0.5, 1, 0, 1, 0.3, 0.5, 0, 0.5, -0.5), 3, 3)
-#' simobs = simGibbs(n.unit = 3, n.gibbs = 200, n.sample = 10, 
+#' simobs = simGibbs(n.unit = 3, n.gibbs = 100, n.sample = 5, 
 #'                   weight.matrix, treat.matrix = 0.5*diag(3), cov.matrix= (-0.3)*diag(3) )
 #' inputY = simobs$inputY                   
 #' inputA = simobs$inputA   

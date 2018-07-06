@@ -1,3 +1,5 @@
+[![Travis-CI Build Status](https://travis-ci.org/youjin1207/netchain.svg?branch=master)](https://travis-ci.org/youjin1207/netchain)
+
 # netchain
 R package for causal inference on collective outcomes under social network
 
