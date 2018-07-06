@@ -72,7 +72,7 @@ When you have multiple confounders and these confounders interactively have an e
 
 ## Counterfactual outcomes
 
-With those observations and edge information, the next step is to infer parameters in the conditiona log-linear models, and with those parameters we generate counterfactual outcomes using Gibbs sampling. Gibbs sampling requires given `treatment` assignment, the number of independent Gibbs samplings (`n.gibbs`), the number of samples per each iteration (`n.sample`), and the number of burn-in samples (`n.burn`) per each iteration. 
+With those observations and edge information, the next step is to infer parameters in the conditional log-linear models, and with those parameters we generate counterfactual outcomes using Gibbs sampling. Gibbs sampling requires given `treatment` assignment, the number of independent Gibbs samplings (`n.gibbs`), the number of samples per each iteration (`n.sample`), and the number of burn-in samples (`n.burn`) per each iteration. 
 
 
 
