@@ -76,7 +76,7 @@ With those observations and edge information, the next step is to infer paramete
 
 
 
-```{r}
+```
 set.seed(1234)
 library(netchain)
 weight.matrix = matrix(c(0.5, 1, 0, 1, 0.3, 0.5, 0, 0.5, -0.5), 3, 3)
@@ -101,7 +101,7 @@ result
 A function `causal.influence` takes the same input as `chain.causal.multi` except that a specific `treatment` is replaced by `Avalues` that 
 In `causal.influence` we evaluate the average of collective outcomes under each treatment assignment $E\big[ \mathbf{Y}(\mathbf{a}_j) \big]$ as a measure of influence of unit \code{j}, where \strong{a}_j indicates the sole intervention of unit \code{j}, but `targetoutcome` can be a vector, matrix or an integer as that in `chain.causal.multi`. 
 
-```{r}
+```
 set.seed(1234)
 influence = causal.influence(targetoutcome = "mean", Avalues = c(1,0), 
                             inputY, inputA, listC = inputC, R.matrix, E.matrix = diag(3), 

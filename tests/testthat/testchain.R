@@ -26,7 +26,7 @@ test_that("Test that causal probability on collective outcomes is estimated",{
   
   result = chain.causal.multi(targetoutcome = "mean", treatment = c(1,0,0), 
                               inputY, inputA, listC = NULL, R.matrix = R.matrix, E.matrix = diag(3), 
-                              n.obs = 1000, n.burn = 100)
+                              n.obs = 2, n.burn = 1)
   
   expect_true(result$causalprob > 0 & result$causalprob < 1)
   expect_equal(result$n.par, 8)
@@ -47,7 +47,7 @@ test_that("Test that chain graph model can be used to identify causally influent
   diag(R.matrix) = 0
   
   influence = causal.influence(targetoutcome = c(1,1,1), Avalues = c(1,0), 
-                               inputY, inputA, listC = NULL, R.matrix, E.matrix = diag(3), n.obs = 100, n.burn = 10)
+                               inputY, inputA, listC = NULL, R.matrix, E.matrix = diag(3), n.obs = 2, n.burn = 1)
   
   expect_true(sum(influence$influence > 0 & influence$influence < 1) == 3)
   expect_equal(influence$n.par, 8)

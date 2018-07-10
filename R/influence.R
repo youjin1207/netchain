@@ -10,7 +10,7 @@
 #' \describe{
 #'    \item{a vector of length \code{m}}{a vector specifies every element of \strong{y}.}
 #'    \item{a \code{[q x m]} matrix}{a collection of \strong{y_1}, \strong{y_2}, ..., \strong{y_q} of which we want to derive the probability.}
-#'    \item{an integer}{the number of 1's in \strong{y} (\eqn{0 \ge & \le m}).}
+#'    \item{an integer}{the number of 1's in \strong{y} (\eqn{0 \ge} & \eqn{\le m}).}
 #'    \item{'mean'}{when we want derive E(\strong{Y}(\strong{a})) (default).}
 #' }
 #' @param Avalues distinct treatment values of which maximum indicates intervention. Defaults to \code{(0,1)}.
@@ -61,9 +61,10 @@
 #' R.matrix = ifelse(weight.matrix==0, 0, 1)
 #' diag(R.matrix) = 0
 #' edgeinfo = list(rbind(c("Y", 1), c("C", 1)), rbind(c("Y", 2), c("C", 2)), 
-#'            rbind(c("Y", 3), c("C", 3)))      
-#' result = causal.influence(targetoutcome = "mean", Avalues = c(1,0), inputY, inputA, 
-#' listC = inputC, R.matrix, E.matrix = diag(3), edgeinfo = edgeinfo)
+#'            rbind(c("Y", 3), c("C", 3)))   
+#' # implement a function (take > 10 seconds)
+#' # result = causal.influence(targetoutcome = "mean", Avalues = c(1,0), inputY, inputA, 
+#' # listC = inputC, R.matrix, E.matrix = diag(3), edgeinfo = edgeinfo)   
 #' 
 #' 
 #' 
