@@ -12,7 +12,7 @@ Author: c(person("Elizabeth", "Ogburn", role="aut",
 Maintainer: Youjin Lee <ylee160@jhu.edu>
 Description: Derive the causal estimates on the collective outcome using chain graph models approximating the projection of the full longitudinal data onto the observed data, which is missing most of the time points from the full data.
 License: GPL (>=3) | file LICENSE
-Imports: Rcpp (>= 0.12.17), Matrix, gtools, stringr, stats, pcalg, igraph, simcausal
+Imports: Rcpp (>= 0.12.17), Matrix, gtools, stringr, stats, igraph, simcausal
 Suggests: knitr, rmarkdown,
     testthat
 LinkingTo: Rcpp
