@@ -31,6 +31,7 @@
 #' }
 #' @param n.obs the number of Gibbs samplers except for burn-in sample.
 #' @param n.burn the number of burn-in sample in Gibbs sampling.
+#' @param optim.method the method used in \code{optim()}. Defaults to \code{"L-BFGS-B"}.
 #'
 #' @return returns \code{"noconvergence"} in case of failure to converence or a list with components :
 #' \item{\code{influence}}{}
@@ -51,108 +52,108 @@
 #' @examples
 #' library(netchain)
 #' set.seed(1234)
-#' weight.matrix = matrix(c(0.5, 1, 0, 1, 0.3, 0.5, 0, 0.5, -0.5), 3, 3)
-#' simobs = simGibbs(n.unit = 3, n.gibbs = 100, n.sample = 5, 
+#' weight.matrix <- matrix(c(0.5, 1, 0, 1, 0.3, 0.5, 0, 0.5, -0.5), 3, 3)
+#' simobs <- simGibbs(n.unit = 3, n.gibbs = 100, n.sample = 5, 
 #'                   weight.matrix,
 #'                   treat.matrix = 0.5*diag(3), cov.matrix= (-0.3)*diag(3) )
-#' inputY = simobs$inputY                   
-#' inputA = simobs$inputA   
-#' inputC = simobs$inputC 
-#' R.matrix = ifelse(weight.matrix==0, 0, 1)
-#' diag(R.matrix) = 0
-#' edgeinfo = list(rbind(c("Y", 1), c("C", 1)), rbind(c("Y", 2), c("C", 2)), 
+#' inputY <- simobs$inputY                   
+#' inputA <- simobs$inputA   
+#' inputC <- simobs$inputC 
+#' R.matrix <- ifelse(weight.matrix==0, 0, 1)
+#' diag(R.matrix) <- 0
+#' edgeinfo <- list(rbind(c("Y", 1), c("C", 1)), rbind(c("Y", 2), c("C", 2)), 
 #'            rbind(c("Y", 3), c("C", 3)))   
 #' # implement a function (take > 10 seconds)
-#' # result = causal.influence(targetoutcome = "mean", Avalues = c(1,0), inputY, inputA, 
+#' # result <- causal.influence(targetoutcome = "mean", Avalues = c(1,0), inputY, inputA, 
 #' # listC = inputC, R.matrix, E.matrix = diag(3), edgeinfo = edgeinfo)   
 #' 
 #' 
 #' 
-causal.influence = function(targetoutcome = "mean", Avalues, inputY, inputA, listC, R.matrix, E.matrix, edgeinfo = NULL, 
-                              n.obs = 1000, n.burn = 100){
+causal.influence <- function(targetoutcome = "mean", Avalues, inputY, inputA, listC, R.matrix, E.matrix, edgeinfo = NULL, 
+                              n.obs = 1000, n.burn = 100, optim.method = "L-BFGS-B"){
   
   allobservations = list()
-  for(i in 1:nrow(inputY)){
-    allobservations[[i]] = rbind(inputY[i,], inputA[i,])
-    if(class(listC) == "list"){
-      for(r in 1:length(listC)){
-        allobservations[[i]] = rbind(allobservations[[i]], listC[[r]][i,])
+  for (i in 1:nrow(inputY)) {
+    allobservations[[i]] <- rbind(inputY[i,], inputA[i,])
+    if (class(listC) == "list") {
+      for (r in 1:length(listC)) {
+        allobservations[[i]] <- rbind(allobservations[[i]], listC[[r]][i,])
       }
-    }else if(class(listC) == "matrix"){
-      allobservations[[i]] = rbind(allobservations[[i]], listC[i,])
+    } else if (class(listC) == "matrix") {
+        allobservations[[i]] <- rbind(allobservations[[i]], listC[i,])
     }
   }
   
-  yvalues = unique(as.numeric(inputY))
+  yvalues <- unique(as.numeric(inputY))
   
-  if(!is.null(edgeinfo)){
-    edgeExtra = list()
-    for(k in 1:length(edgeinfo)){
-      tmpname = ifelse(edgeinfo[[k]][,1] == "Y", 1, 0)
-      tmpname = ifelse(edgeinfo[[k]][,1] == "A", 2, tmpname)
-      if(sum(str_extract(edgeinfo[[k]][,1], "[aA-zZ]+") == "C")!=0){
-        var.order =  which(str_extract(edgeinfo[[k]][,1], "[aA-zZ]+") == "C")
-        confounder.num = str_extract(edgeinfo[[k]][var.order,1], "[0-9]+")
-        if(is.na(confounder.num)) confounder.num = 1
-        tmpname[var.order] = 2 + as.integer(confounder.num)
+  if (!is.null(edgeinfo)) {
+    edgeExtra <- list()
+    for (k in 1:length(edgeinfo)) {
+      tmpname <- ifelse(edgeinfo[[k]][,1] == "Y", 1, 0)
+      tmpname <- ifelse(edgeinfo[[k]][,1] == "A", 2, tmpname)
+      if (sum(str_extract(edgeinfo[[k]][,1], "[aA-zZ]+") == "C")!=0) {
+        var.order <-  which(str_extract(edgeinfo[[k]][,1], "[aA-zZ]+") == "C")
+        confounder.num <- str_extract(edgeinfo[[k]][var.order,1], "[0-9]+")
+        if (is.na(confounder.num)) confounder.num <- 1
+          tmpname[var.order] <- 2 + as.integer(confounder.num)
       }
-      edgeExtra[[k]] = cbind(as.integer(tmpname), as.integer(edgeinfo[[k]][,2]))
+      edgeExtra[[k]] <- cbind(as.integer(tmpname), as.integer(edgeinfo[[k]][,2]))
     }
-  }else{
-    edgeExtra = NULL
+  } else {
+    edgeExtra <- NULL
   }
   
   # define edgeY; edgeAY; edgeCY
-  edgeY = cbind(which(R.matrix == 1) %/% nrow(R.matrix) + 1, which(R.matrix == 1) %% nrow(R.matrix))
-  edgeY[which(edgeY[,2] == 0), 1] = edgeY[which(edgeY[,2] == 0),1] -1
-  edgeY[which(edgeY[,2] == 0), 2] = nrow(R.matrix)
-  edgeY = edgeY[which(edgeY[,1] < edgeY[,2]),]
-  if(class(edgeY) == "numeric") edgeY = t(as.matrix(edgeY))
-  colnames(edgeY) = c("Y", "Y")
+  edgeY <- cbind(which(R.matrix == 1) %/% nrow(R.matrix) + 1, which(R.matrix == 1) %% nrow(R.matrix))
+  edgeY[which(edgeY[,2] == 0), 1] <- edgeY[which(edgeY[,2] == 0),1] -1
+  edgeY[which(edgeY[,2] == 0), 2] <- nrow(R.matrix)
+  edgeY <- edgeY[which(edgeY[,1] < edgeY[,2]),]
+  if(class(edgeY) == "numeric") edgeY <- t(as.matrix(edgeY))
+  colnames(edgeY) <- c("Y", "Y")
   
-  edgeAY = cbind(which(E.matrix == 1) %% nrow(E.matrix), which(E.matrix == 1) %/% nrow(E.matrix) + 1)
-  edgeAY[which(edgeAY[,1] == 0), 2] = edgeAY[which(edgeAY[,1] == 0),2] -1
-  edgeAY[which(edgeAY[,1] == 0), 1] = nrow(E.matrix)
-  if(class(edgeAY) == "numeric") edgeAY = t(as.matrix(edgeAY))
-  colnames(edgeAY) = c("A", "Y")
+  edgeAY <- cbind(which(E.matrix == 1) %% nrow(E.matrix), which(E.matrix == 1) %/% nrow(E.matrix) + 1)
+  edgeAY[which(edgeAY[,1] == 0), 2] <- edgeAY[which(edgeAY[,1] == 0),2] -1
+  edgeAY[which(edgeAY[,1] == 0), 1] <- nrow(E.matrix)
+  if(class(edgeAY) == "numeric") edgeAY <- t(as.matrix(edgeAY))
+  colnames(edgeAY) <- c("A", "Y")
   
   ## define n.par and par.est ##
-  n.par = ncol(inputY) + nrow(edgeY) + nrow(edgeAY) + length(edgeExtra)
-  permutetab = permutations(n=length(unique(as.numeric(inputY))), r=ncol(inputY), unique(as.numeric(inputY)), repeats.allowed=T)
+  n.par <- ncol(inputY) + nrow(edgeY) + nrow(edgeAY) + length(edgeExtra)
+  permutetab <- permutations(n=length(unique(as.numeric(inputY))), r=ncol(inputY), unique(as.numeric(inputY)), repeats.allowed=T)
   
-  par.est = try(optim(par = rep(0, n.par), multiloglikechain, listobservations = allobservations,
+  par.est <- try(optim(par = rep(0, n.par), multiloglikechain, listobservations = allobservations,
                       permutetab = permutetab,  edgeY = edgeY,
                       edgeAY = edgeAY, edgeExtra = edgeExtra,
-                      control = list(fnscale = -1), method = "L-BFGS-B")$par,
+                      control = list(fnscale = -1), method = optim.method)$par,
                 silent = TRUE)
-  if(class(par.est) == "try-error") return("noconvergence")
+  if (class(par.est) == "try-error") return("noconvergence")
   
   #multiloglikechain(NumericVector pars, List allobservations, NumericMatrix permutetab)
-  Neighborind = Neighborpar = list()
-  for(i in 1:ncol(inputY)){
-    Neighborind[[i]] = list(); Neighborpar[[i]] = list();
-    Neighborind[[i]][[1]] = t(as.matrix(c(1,i))); Neighborpar[[i]][[1]] = i;
+  Neighborind = Neighborpar <- list()
+  for (i in 1:ncol(inputY)) {
+    Neighborind[[i]] <- list(); Neighborpar[[i]] <- list();
+    Neighborind[[i]][[1]] <- t(as.matrix(c(1,i))); Neighborpar[[i]][[1]] <- i;
     whichnb = which(rowSums(edgeY == i)!=0)
-    if(length(whichnb) > 0){
-      for(j in 1:length(whichnb)){
-        Neighborind[[i]][[1+j]] = rbind(c(1,i) ,cbind(1, edgeY[whichnb[j],][edgeY[whichnb[j],]!=i])); 
-        Neighborpar[[i]][[1+j]] = ncol(inputY) + whichnb[j];
+    if (length(whichnb) > 0) {
+      for (j in 1:length(whichnb)) {
+        Neighborind[[i]][[1+j]] <- rbind(c(1,i) ,cbind(1, edgeY[whichnb[j],][edgeY[whichnb[j],]!=i])); 
+        Neighborpar[[i]][[1+j]] <- ncol(inputY) + whichnb[j];
       }
     }
     whicheffect = which(edgeAY[,2] == i) # first column : A; second column : Y
-    if(length(whicheffect) > 0){
-      for(l in 1:length(whicheffect)){
-        Neighborind[[i]][[1+length(whichnb)+l]] = rbind(c(1,i) ,cbind(2, edgeAY[whicheffect[l],1])); 
-        Neighborpar[[i]][[1+length(whichnb)+l]] = ncol(inputY) + nrow(edgeY) + whicheffect[l];
+    if (length(whicheffect) > 0) {
+      for (l in 1:length(whicheffect)) {
+        Neighborind[[i]][[1+length(whichnb)+l]] <- rbind(c(1,i) ,cbind(2, edgeAY[whicheffect[l],1])); 
+        Neighborpar[[i]][[1+length(whichnb)+l]] <- ncol(inputY) + nrow(edgeY) + whicheffect[l];
       }
     }
-    count = 0
-    for(k in 1:length(edgeExtra)){
-      if(sum(edgeExtra[[k]][,1] == 1 & edgeExtra[[k]][,2] == i) > 0){
-        count = count + 1
-        mynode = which(edgeExtra[[k]][,1] == 1 & edgeExtra[[k]][,2] == i)
-        Neighborind[[i]][[1+length(whichnb)+length(whicheffect)+count]] = rbind(c(1,i) ,cbind(edgeExtra[[k]][-mynode,1], edgeExtra[[k]][-mynode,2]))
-        Neighborpar[[i]][[1+length(whichnb)+length(whicheffect)+count]] = ncol(inputY) + nrow(edgeY) + nrow(edgeAY) + k
+    count <- 0
+    for (k in 1:length(edgeExtra)) {
+      if (sum(edgeExtra[[k]][,1] == 1 & edgeExtra[[k]][,2] == i) > 0) {
+        count <- count + 1
+        mynode <- which(edgeExtra[[k]][,1] == 1 & edgeExtra[[k]][,2] == i)
+        Neighborind[[i]][[1+length(whichnb)+length(whicheffect)+count]] <- rbind(c(1,i) ,cbind(edgeExtra[[k]][-mynode,1], edgeExtra[[k]][-mynode,2]))
+        Neighborpar[[i]][[1+length(whichnb)+length(whicheffect)+count]] <- ncol(inputY) + nrow(edgeY) + nrow(edgeAY) + k
       }
     }
   }
@@ -160,33 +161,32 @@ causal.influence = function(targetoutcome = "mean", Avalues, inputY, inputA, lis
   
   ## g-formula under the existence of confounders
   ## Avalues = c(1,0)
-  treatments = matrix(min(Avalues), nrow = ncol(inputY), ncol = ncol(inputY))
-  diag(treatments) = max(Avalues)
+  treatments <- matrix(min(Avalues), nrow = ncol(inputY), ncol = ncol(inputY))
+  diag(treatments) <- max(Avalues)
   
-  targets = rep(0, nrow(treatments))
-  for(k in 1:length(targets)){
-    for(i in 1:length(allobservations)){
-      if(nrow(allobservations[[1]]) > 2){
-        covariates = allobservations[[i]][3:nrow(allobservations[[i]]),]
-      }else{
-        covariates = NULL
+  targets <- rep(0, nrow(treatments))
+  for (k in 1:length(targets)) {
+    for (i in 1:length(allobservations)) {
+      if (nrow(allobservations[[1]]) > 2) {
+        covariates <- allobservations[[i]][3:nrow(allobservations[[i]]),]
+      } else {
+        covariates <- NULL
       }
-      outcomes =  chaingibbs(pars = par.est, n.obs = 500, treatment = treatments[k,], covariates, initprob = 0.5, yvalues, Neighborind, Neighborpar,
+      outcomes <- chaingibbs(pars = par.est, n.obs = 500, treatment = treatments[k,], covariates, initprob = 0.5, yvalues, Neighborind, Neighborpar,
                              n.burn = 100)
-      if(class(targetoutcome) == "numeric" & length(targetoutcome) == ncol(inputY)){
-        targets[k] = targets[k] + mean(rowMeans(outcomes == targetoutcome) == 1 ) / length(allobservations)
-      }else if(class(targetoutcome) == "matrix" ){
-        for(jj in 1:nrow(targetoutcome)){
-          targets[k] = targets[k] +  mean(rowMeans(outcomes == targetoutcome[jj,]) == 1 ) / length(allobservations)
+      if (class(targetoutcome) == "numeric" & length(targetoutcome) == ncol(inputY)) {
+        targets[k] <- targets[k] + mean(rowMeans(outcomes == targetoutcome) == 1 ) / length(allobservations)
+      } else if (class(targetoutcome) == "matrix") {
+        for (jj in 1:nrow(targetoutcome)) {
+          targets[k] <- targets[k] +mean(rowMeans(outcomes == targetoutcome[jj,]) == 1 ) / length(allobservations)
         }
-      }else if(class(targetoutcome) == "numeric" & length(targetoutcome) == 1){
-        targets[k] = targets[k] +  mean(rowSums(outcomes == max(yvalues)) == targetoutcome ) / length(allobservations)
-      }else{
-        targets[k] = targets[k] + mean(rowMeans(outcomes == max(yvalues))) / length(allobservations)
+      } else if (class(targetoutcome) == "numeric" & length(targetoutcome) == 1) {
+        targets[k] <- targets[k] +  mean(rowSums(outcomes == max(yvalues)) == targetoutcome ) / length(allobservations)
+      } else {
+        targets[k] <- targets[k] + mean(rowMeans(outcomes == max(yvalues))) / length(allobservations)
       }
     }
   }
-  
   return(list(influence = targets, n.par = n.par, par.est = par.est))
 }
 

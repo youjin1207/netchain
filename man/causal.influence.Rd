@@ -5,7 +5,8 @@
 \title{Identifying causally influential units on social network}
 \usage{
 causal.influence(targetoutcome = "mean", Avalues, inputY, inputA, listC,
-  R.matrix, E.matrix, edgeinfo = NULL, n.obs = 1000, n.burn = 100)
+  R.matrix, E.matrix, edgeinfo = NULL, n.obs = 1000, n.burn = 100,
+  optim.method = "L-BFGS-B")
 }
 \arguments{
 \item{targetoutcome}{is a targeted couterfactual outcome of probability is in our interest, having different forms depending on the context of influence : 
@@ -42,6 +43,8 @@ causal.influence(targetoutcome = "mean", Avalues, inputY, inputA, listC,
 \item{n.obs}{the number of Gibbs samplers except for burn-in sample.}
 
 \item{n.burn}{the number of burn-in sample in Gibbs sampling.}
+
+\item{optim.method}{the method used in \code{optim()}. Defaults to \code{"L-BFGS-B"}.}
 }
 \value{
 returns \code{"noconvergence"} in case of failure to converence or a list with components :
@@ -57,19 +60,20 @@ where \strong{a}_j indicates the sole intervention of unit \code{j}.
 \examples{
 library(netchain)
 set.seed(1234)
-weight.matrix = matrix(c(0.5, 1, 0, 1, 0.3, 0.5, 0, 0.5, -0.5), 3, 3)
-simobs = simGibbs(n.unit = 3, n.gibbs = 100, n.sample = 5, 
+weight.matrix <- matrix(c(0.5, 1, 0, 1, 0.3, 0.5, 0, 0.5, -0.5), 3, 3)
+simobs <- simGibbs(n.unit = 3, n.gibbs = 100, n.sample = 5, 
                   weight.matrix,
                   treat.matrix = 0.5*diag(3), cov.matrix= (-0.3)*diag(3) )
-inputY = simobs$inputY                   
-inputA = simobs$inputA   
-inputC = simobs$inputC 
-R.matrix = ifelse(weight.matrix==0, 0, 1)
-diag(R.matrix) = 0
-edgeinfo = list(rbind(c("Y", 1), c("C", 1)), rbind(c("Y", 2), c("C", 2)), 
-           rbind(c("Y", 3), c("C", 3)))      
-# result = causal.influence(targetoutcome = "mean", Avalues = c(1,0), inputY, inputA, 
-# listC = inputC, R.matrix, E.matrix = diag(3), edgeinfo = edgeinfo)
+inputY <- simobs$inputY                   
+inputA <- simobs$inputA   
+inputC <- simobs$inputC 
+R.matrix <- ifelse(weight.matrix==0, 0, 1)
+diag(R.matrix) <- 0
+edgeinfo <- list(rbind(c("Y", 1), c("C", 1)), rbind(c("Y", 2), c("C", 2)), 
+           rbind(c("Y", 3), c("C", 3)))   
+# implement a function (take > 10 seconds)
+# result <- causal.influence(targetoutcome = "mean", Avalues = c(1,0), inputY, inputA, 
+# listC = inputC, R.matrix, E.matrix = diag(3), edgeinfo = edgeinfo)   
 
 
 

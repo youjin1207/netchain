@@ -12,58 +12,54 @@
 #' @param n.burn the number of burn-in sample in Gibbs sampling (\eqn{\ge} \code{n.obs}). 
 #' @param yvalues a vector of distinct binary outcome values. Defaults to \code{c(0,1)}.
 #'
-#' @return a list of \code{[n.obs]} independent observations:
-#' \item{\code{inputY}}{a \code{[n.obs x m]} matrix for outcomes.}
-#' \item{\code{inputA}}{a \code{[n.obs x m]} matrix for treatments.}
-#' \item{\code{inputC}}{a \code{[n.obs x m]} matrix for confounders.}
+#' @return a list of \code{[n.gibbs] x [n.sample]} independent observations:
+#' \item{\code{inputY}}{a \code{[([n.gibbs] x [n.sample]) x m]} matrix for outcomes.}
+#' \item{\code{inputA}}{a \code{[([n.gibbs] x [n.sample]) x m]} matrix for treatments.}
+#' \item{\code{inputC}}{a \code{[([n.gibbs] x [n.sample]) x m]} matrix for confounders.}
 #' 
 #' @export
 #'
 #' @examples
 #' library(netchain)
-#' weight.matrix = matrix(c(0.5, 1, 0, 1, 0.3, 0.5, 0, 0.5, -0.5), 3, 3)
-#' simobs = simGibbs(n.unit = 3, n.gibbs = 200, n.sample = 10, 
+#' weight.matrix <- matrix(c(0.5, 1, 0, 1, 0.3, 0.5, 0, 0.5, -0.5), 3, 3)
+#' simobs <- simGibbs(n.unit = 3, n.gibbs = 200, n.sample = 10, 
 #'                   weight.matrix,
 #'                   treat.matrix = 0.5*diag(3), cov.matrix= (-0.3)*diag(3) )
-#' inputY = simobs$inputY
-#' inputA = simobs$inputA
-#' inputC = simobs$inputC
+#' inputY <- simobs$inputY
+#' inputA <- simobs$inputA
+#' inputC <- simobs$inputC
 #' 
-simGibbs = function(n.unit, n.gibbs, n.sample, 
+simGibbs <- function(n.unit, n.gibbs, n.sample, 
                     weight.matrix, treat.matrix, cov.matrix,
                     init.prob = 0.5, treat.prob = 0.5, cov.prob = 0.5, 
                     n.burn = 100, yvalues = c(1,0)){
   inputY = inputA = inputC = c()
   
-  for(r in 1:n.gibbs){
-    n.iter = n.burn + n.sample
-    outcome = matrix(0, n.iter, n.unit)
-    t = 1
-    treatment = rbinom(n.unit, 1, init.prob)
-    cov = rbinom(n.unit, 1, init.prob)
-    outcome[t,]  = rbinom(n.unit, 1, init.prob)
-    outcome[t,] = ifelse(outcome[t,] == 1, max(yvalues), min(yvalues))
-    for(t in 2:n.iter){
-      random.ind = sample(1:n.unit, 1)
+  for (r in 1:n.gibbs) {
+    n.iter <- n.burn + n.sample
+    outcome <- matrix(0, n.iter, n.unit)
+    t <- 1
+    treatment <- rbinom(n.unit, 1, init.prob)
+    cov <- rbinom(n.unit, 1, init.prob)
+    outcome[t,]  <- rbinom(n.unit, 1, init.prob)
+    outcome[t,] <- ifelse(outcome[t,] == 1, max(yvalues), min(yvalues))
+    for (t in 2:n.iter) {
+      random.ind <- sample(1:n.unit, 1)
       # from previous time
-      outcome[t,] = outcome[t-1,]
-      
-      for(i in 1:n.unit){
-        if(random.ind == i){
-          out = diag(weight.matrix)[i] +  sum(outcome[t-1,-i]*weight.matrix[i,-i]) +
-            sum(treatment*treat.matrix[,i]) +
-            sum(cov*cov.matrix[i,]) 
+      outcome[t,] <- outcome[t-1,]
+      for (i in 1:n.unit) {
+        if (random.ind == i) {
+          out <- diag(weight.matrix)[i] +  sum(outcome[t-1,-i]*weight.matrix[i,-i]) +
+            sum(treatment*treat.matrix[,i]) + sum(cov*cov.matrix[i,]) 
         }
       }
-      outcome[t, random.ind] = rbinom(1,1, exp(out) / (1 + exp(out)))
-      outcome[t, random.ind] = ifelse(outcome[t, random.ind] == 1, max(yvalues), min(yvalues))
+      outcome[t, random.ind] <- rbinom(1,1, exp(out) / (1 + exp(out)))
+      outcome[t, random.ind] <- ifelse(outcome[t, random.ind] == 1, max(yvalues), min(yvalues))
     }
     
-    inputY = rbind(inputY, outcome[c((n.burn+1):n.iter),])
-    inputA = rbind(inputA, t(matrix(rep(treatment, n.sample), n.unit, n.sample)))
-    inputC = rbind(inputC, t(matrix(rep(cov, n.sample), n.unit, n.sample)))
+    inputY <- rbind(inputY, outcome[c((n.burn+1):n.iter),])
+    inputA <- rbind(inputA, t(matrix(rep(treatment, n.sample), n.unit, n.sample)))
+    inputC <- rbind(inputC, t(matrix(rep(cov, n.sample), n.unit, n.sample)))
   }
-  
   return(list(inputY = inputY, inputA = inputA, inputC = inputC))
-  
 }

@@ -32,22 +32,22 @@ simGibbs(n.unit, n.gibbs, n.sample, weight.matrix, treat.matrix, cov.matrix,
 \item{yvalues}{a vector of distinct binary outcome values. Defaults to \code{c(0,1)}.}
 }
 \value{
-a list of \code{[n.obs]} independent observations:
-\item{\code{inputY}}{a \code{[n.obs x m]} matrix for outcomes.}
-\item{\code{inputA}}{a \code{[n.obs x m]} matrix for treatments.}
-\item{\code{inputC}}{a \code{[n.obs x m]} matrix for confounders.}
+a list of \code{[n.gibbs] x [n.sample]} independent observations:
+\item{\code{inputY}}{a \code{[([n.gibbs] x [n.sample]) x m]} matrix for outcomes.}
+\item{\code{inputA}}{a \code{[([n.gibbs] x [n.sample]) x m]} matrix for treatments.}
+\item{\code{inputC}}{a \code{[([n.gibbs] x [n.sample]) x m]} matrix for confounders.}
 }
 \description{
 Generate binary (\strong{Y}, \strong{A}, \strong{C}) from chain graph model under simplest scenario.
 }
 \examples{
 library(netchain)
-weight.matrix = matrix(c(0.5, 1, 0, 1, 0.3, 0.5, 0, 0.5, -0.5), 3, 3)
-simobs = simGibbs(n.unit = 3, n.gibbs = 200, n.sample = 10, 
+weight.matrix <- matrix(c(0.5, 1, 0, 1, 0.3, 0.5, 0, 0.5, -0.5), 3, 3)
+simobs <- simGibbs(n.unit = 3, n.gibbs = 200, n.sample = 10, 
                   weight.matrix,
                   treat.matrix = 0.5*diag(3), cov.matrix= (-0.3)*diag(3) )
-inputY = simobs$inputY
-inputA = simobs$inputA
-inputC = simobs$inputC
+inputY <- simobs$inputY
+inputA <- simobs$inputA
+inputC <- simobs$inputC
 
 }

@@ -1,13 +1,14 @@
 ---
 title: "Estimation of probability associated with collective counterfactual outcomes"
 author: "Youjin Lee"
-date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
+output: 
+  pdf_document
 vignette: >
   %\VignetteIndexEntry{netchain}
   %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+  %\VignetteEncoding{UTF-8}  
 ---
+
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
@@ -64,7 +65,7 @@ mat1 = rbind(c("Y", 1), c("A", 1), c("A", 2))
 ```
 implies that $A_{1}$ and $A_{2}$ have a direct causal effect on $Y_{1}$ and these two have a interaction effect; this will lead to three-way interaction term of $Y_{1}$, $A_{1}$, and $A_{2}$ in the log-linear model. (In this case a direct effect of $A_{1}$ on $Y_{1}$ and $A_{2}$ on $Y_{1}$ should be also specified.) 
 
-```{r}
+```
 mat2 = rbind(c("Y", 1), c("C1", 1), c("C2", 1)) 
 ```
 
@@ -99,7 +100,7 @@ result
 ## Identifying influential units
 
 A function `causal.influence` takes the same input as `chain.causal.multi` except that a specific `treatment` is replaced by `Avalues` that 
-In `causal.influence` we evaluate the average of collective outcomes under each treatment assignment $E\big[ \mathbf{Y}(\mathbf{a}_j) \big]$ as a measure of influence of unit \code{j}, where \strong{a}_j indicates the sole intervention of unit \code{j}, but `targetoutcome` can be a vector, matrix or an integer as that in `chain.causal.multi`. 
+In `causal.influence` we evaluate the average of collective outcomes under each treatment assignment $E\big[ \mathbf{Y}(\mathbf{a}_j) \big]$ as a measure of influence of unit $j$, where $a_j$ indicates the sole intervention of unit $j$, but `targetoutcome` can be a vector, matrix or an integer as that in `chain.causal.multi`. 
 
 ```
 set.seed(1234)

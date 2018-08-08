@@ -8,7 +8,6 @@
 #' and directed acyclic graphs (DAGs) models used to represent casual relationships. 
 #' 
 #' 
-#' 
 #'
 #' @param targetoutcome is a targeted couterfactual outcome of probability is in our interest, having different forms: 
 #' \describe{
@@ -35,6 +34,7 @@
 #' }
 #' @param n.obs the number of Gibbs samplers except for burn-in sample.
 #' @param n.burn the number of burn-in sample in Gibbs sampling.
+#' @param optim.method the method used in \code{optim()}. Defaults to \code{"L-BFGS-B"}.
 #'
 #' @return returns \code{"noconvergence"} in case of failure to converence or a list with components :
 #' \item{\code{causalprob}}{the estimated probability P(\strong{Y}(\strong{a}) = \strong{y}).}
@@ -54,24 +54,24 @@
 #' @examples
 #' library(netchain)
 #' set.seed(1234)
-#' weight.matrix = matrix(c(0.5, 1, 0, 1, 0.3, 0.5, 0, 0.5, -0.5), 3, 3)
-#' simobs = simGibbs(n.unit = 3, n.gibbs = 100, n.sample = 5, 
+#' weight.matrix <- matrix(c(0.5, 1, 0, 1, 0.3, 0.5, 0, 0.5, -0.5), 3, 3)
+#' simobs <- simGibbs(n.unit = 3, n.gibbs = 100, n.sample = 5, 
 #'                   weight.matrix, treat.matrix = 0.5*diag(3), cov.matrix= (-0.3)*diag(3) )
-#' inputY = simobs$inputY                   
-#' inputA = simobs$inputA   
-#' inputC = simobs$inputC 
-#' R.matrix = ifelse(weight.matrix==0, 0, 1)    
-#' diag(R.matrix) = 0
-#' edgeinfo = list(rbind(c("Y", 1), c("C", 1)), rbind(c("Y", 2), c("C", 2)), 
+#' inputY <- simobs$inputY                   
+#' inputA <- simobs$inputA   
+#' inputC <- simobs$inputC 
+#' R.matrix <- ifelse(weight.matrix==0, 0, 1)    
+#' diag(R.matrix) <- 0
+#' edgeinfo <- list(rbind(c("Y", 1), c("C", 1)), rbind(c("Y", 2), c("C", 2)), 
 #'            rbind(c("Y", 3), c("C", 3)))  
 #' # implement a function (take > 10 seconds)
-#' # result = chain.causal.multi(targetoutcome = "mean",
-#' # treatment = c(1,0,0), inputY, inputA, listC = inputC, R.matrix, 
-#' # E.matrix = diag(3), edgeinfo = edgeinfo)
+#' # result <- chain.causal.multi(targetoutcome = "mean",
+#' # treatment <- c(1,0,0), inputY, inputA, listC = inputC, R.matrix, 
+#' # E.matrix <- diag(3), edgeinfo = edgeinfo)
 #' 
 #' 
 chain.causal.multi = function(targetoutcome = "mean", treatment, inputY, inputA, listC, R.matrix, E.matrix, edgeinfo = NULL, 
-                              n.obs = 1000, n.burn = 100){
+                              n.obs = 1000, n.burn = 100, optim.method = "L-BFGS-B"){
   
   allobservations = list()
   for(i in 1:nrow(inputY)){
@@ -117,7 +117,7 @@ chain.causal.multi = function(targetoutcome = "mean", treatment, inputY, inputA,
   edgeAY[which(edgeAY[,1] == 0), 1] = nrow(E.matrix)
   if(class(edgeAY) == "numeric") edgeAY = t(as.matrix(edgeAY))
   colnames(edgeAY) = c("A", "Y")
-
+  
   ## define n.par and par.est ##
   n.par = ncol(inputY) + nrow(edgeY) + nrow(edgeAY) + length(edgeExtra)
   permutetab = permutations(n=length(unique(as.numeric(inputY))), r=ncol(inputY), unique(as.numeric(inputY)), repeats.allowed=T)
@@ -125,7 +125,7 @@ chain.causal.multi = function(targetoutcome = "mean", treatment, inputY, inputA,
   par.est = try(optim(par = rep(0, n.par), multiloglikechain, listobservations = allobservations,
                       permutetab = permutetab, edgeY = edgeY,
                       edgeAY = edgeAY, edgeExtra = edgeExtra,
-                      control = list(fnscale = -1), method = "L-BFGS-B")$par,
+                      control = list(fnscale = -1), method = optim.method)$par,
                 silent = TRUE)
   if(class(par.est) == "try-error") return("noconvergence")
   
@@ -168,13 +168,13 @@ chain.causal.multi = function(targetoutcome = "mean", treatment, inputY, inputA,
     }else{
       covariates = NULL
     }
-    outcomes =  chaingibbs(pars = par.est, n.obs = 500, treatment, covariates, initprob = 0.5, yvalues = c(0,1), Neighborind, Neighborpar,
-                           n.burn = 100)
+    outcomes =  chaingibbs(pars = par.est, n.obs = n.obs, treatment, covariates, initprob = 0.5, yvalues = c(0,1), Neighborind, Neighborpar,
+                           n.burn = n.burn)
     if(class(targetoutcome) == "numeric" & length(targetoutcome) == ncol(inputY)){
       targets = targets + mean(rowMeans(outcomes == targetoutcome) == 1 ) / length(allobservations)
     }else if(class(targetoutcome) == "matrix" ){
       for(jj in 1:nrow(targetoutcome)){
-        targets = targets +  mean(rowMeans(outcomes == targetoutcome[jj,]) == 1 ) / length(allobservations)
+        targets = targets +  mean(apply(outcomes, 1, function(x) identical(x, targetoutcome[jj,])))  / length(allobservations)
       }
     }else if(class(targetoutcome) == "numeric" & length(targetoutcome) == 1){
       targets = targets +  mean(rowSums(outcomes == max(yvalues)) == targetoutcome ) / length(allobservations)
@@ -184,6 +184,3 @@ chain.causal.multi = function(targetoutcome = "mean", treatment, inputY, inputA,
   }
   return(list(causalprob = targets, n.par = n.par, par.est = par.est))
 }
-
-
-

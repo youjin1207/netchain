@@ -25,40 +25,36 @@
 chaingibbs = function(pars, n.obs, treatment, covariates, initprob = 0.5, 
                       yvalues = c(0,1), Neighborind, Neighborpar,
                       n.burn){
-  n.iter = n.burn + n.obs
-  m = length(treatment)
+  n.iter <- n.burn + n.obs
+  m <- length(treatment)
  
-  outcome = matrix(0, n.iter, m)
-  t=1
-  outcome[t,] = rbinom(m, 1, initprob)
-  outcome[t,] = ifelse(outcome[t,] == 1, max(yvalues), min(yvalues))
-  observations = rbind(outcome[t,], treatment, covariates)
+  outcome <- matrix(0, n.iter, m)
+  t <- 1
+  outcome[t,] <- rbinom(m, 1, initprob)
+  outcome[t,] <- ifelse(outcome[t,] == 1, max(yvalues), min(yvalues))
+  observations <- rbind(outcome[t,], treatment, covariates)
   
-  for(t in 2:n.iter){
-    random.index = sample(1:m, 1)
-    for(i in 1:m){
-      if(random.index == i){
-        out = 0; out0 = 0
-        for(r in 1:length(Neighborpar[[i]])){
-          ####
-          observations1 = observations; observations1[1,i] = max(yvalues)
-          term = as.matrix(observations1[Neighborind[[i]][[r]][,1], Neighborind[[i]][[r]][,2]])
-          out = out + 
-            pars[Neighborpar[[i]][[r]]]*prod(diag(term))
-          ####
-          observations0 = observations; observations0[1,i] = min(yvalues)
-          term0 = as.matrix(observations0[Neighborind[[i]][[r]][,1], Neighborind[[i]][[r]][,2]])
-          out0 = out0 + 
-            pars[Neighborpar[[i]][[r]]]*prod(diag(term0))
+  for (t in 2:n.iter) {
+    random.index <- sample(1:m, 1)
+    for (i in 1:m) {
+      if (random.index == i) {
+        out <- 0; out0 <- 0
+        for (r in 1:length(Neighborpar[[i]])) {
+          observations1 <- observations; observations1[1,i] <- max(yvalues)
+          term <- as.matrix(observations1[Neighborind[[i]][[r]][,1], Neighborind[[i]][[r]][,2]])
+          out <- out + pars[Neighborpar[[i]][[r]]]*prod(diag(term))
+          observations0 <- observations; observations0[1,i] <- min(yvalues)
+          term0 <- as.matrix(observations0[Neighborind[[i]][[r]][,1], Neighborind[[i]][[r]][,2]])
+          out0 <- out0 + pars[Neighborpar[[i]][[r]]]*prod(diag(term0))
         }
       }
     }
-    outcome[t,]  = outcome[(t-1),]
-    outcome[t, random.index] = rbinom(1,1, exp(out)/(exp(out) + exp(out0)) )
-    outcome[t, random.index] = ifelse( outcome[t, random.index] == 1, max(yvalues), min(yvalues))
-    observations[1,] = outcome[t,]
+    outcome[t,]  <- outcome[(t-1),]
+    outcome[t, random.index] <- rbinom(1,1, exp(out)/(exp(out) + exp(out0)) )
+    outcome[t, random.index] <- ifelse( outcome[t, random.index] == 1, max(yvalues), min(yvalues))
+    observations[1,] <- outcome[t,]
   }
   
-  Youtcomes = outcome[c((n.burn+1):n.iter), ]
+  Youtcomes <- outcome[c((n.burn+1):n.iter), ]
   return(Youtcomes)
 }
