@@ -7,6 +7,7 @@ vignette: >
   %\VignetteIndexEntry{netchain}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}  
+header-includes: \usepackage{float}
 ---
 
 
@@ -17,9 +18,61 @@ knitr::opts_chunk$set(
 )
 ```
 
+## Approximation of Directed Acyclic Graph (DAG)
+
+In social network, treatments may spill over from the treated individual to his or her social contacts and outcomes may be contagious. Therefore, causal inference using observational data from a single social network requires observing longitudinal data on treatments and outcomes as they evolve in real-time, so that each spillover or contagious event appears in the data. In these settings, directed acyclic graph (DAG) has been used to represent interference and contagion, but DAGs can quickly be cumbersome. Especially in most cases it is impossible to collect the kind of real-time data required. If it is, the resulting model will be generally high-dimensional and often too big to fit the available data. 
+
+To illustrate, using `simcausal` `R` package, we can define `DAG` object where outcome variables of $( Y^{t}_{1}, Y^{t}_{2}, Y^{t}_{3})$ from $t=0,1,2,\ldots,20$ while unit-specific treatment variable $(A_{1}, A_{2}, A_{3})$ has a causal effect on each of them. Figure \ref{fig:DAG} illustrates data generating mechanism or causal relationship which a `DAG` object of `lDAG` stands for.
+
+
+```{r}
+library(simcausal)
+D <- DAG.empty()
+D <- D +
+  node("A1", t = 0, distr = "rbern", prob = 0.3) + 
+  node("A2", t = 0, distr = "rbern", prob = 0.5) + 
+  node("A3", t = 0, distr = "rbern", prob = 0.7) +
+  node("Y1", t = 0, distr = "rbern", prob = plogis(-1 + A1[0])) + 
+  node("Y2", t = 0, distr = "rbern", prob = plogis(0 - 0.5*A2[0])) + 
+  node("Y3", t = 0, distr = "rbern", prob = plogis(1 - 0.5*A3[0]))
+t.end <- 20
+D <- D + 
+  node("Y1", t = 1:t.end, distr = "rbern",
+       prob = plogis(3*Y1[t-1] - 1.5 + A1[0] + Y2[t-1])) + 
+  node("Y2", t = 1:t.end, distr = "rbern",
+       prob = plogis(3*Y2[t-1] - 2 - 0.5*A2[0] + Y1[t-1] -Y3[t-1])) +
+  node("Y3", t = 1:t.end, distr = "rbern", 
+       prob = plogis(3*Y3[t-1] - 1 - 0.5*A3[0] -Y2[t-1]))
+
+lDAG <- set.DAG(D, verbose = FALSE)
+```
+
+
+```{r, fig.cap="\\label{fig:DAG} plotting an example of evolving outcome variables $(Y_{1}, Y_{2}, Y_{3})$ and treatment variables $(A_{1}, A_{2}, A_{3})$ following directed cyclic graph of `lDAG`.", fig.pos="H"}
+par(mar = c(4, 4, 1, 1))
+plotDAG(lDAG, tmax = 10, xjitter = 0.3, yjitter = 0.1,
+     edge_attrs = list(width = 0.2, arrow.width = 0.5, arrow.size = 0.3),
+     vertex_attrs = list(size = 10, label.cex = 0.5, label.color = "dodgerblue"),
+     verbose = FALSE)
+```
+
+
+Note that for causal inference, DAGs are only useful when if we observe all of the $Y^{t}_{i}$ variables. However we often observe outcomes at certain time point after some unknown process of interference or contagion: in the above case, $(Y^{t=20}_{1}, Y^{t=20}_{2}, Y^{t=20}_{3})$.  
+
+If $Y^{t}_{i}$ is approximated equal to $Y^{t-1}_{i}$, the conditional independence implied by the chain graph, which includes directed edges and undirected edges with no directed cycles, holds approximately in the DAG model. In this case, conditional (in)dependence structure in DAG from Figure \ref{fig:DAG} (approximately) holds for those of chain graph in Figure \ref{fig:CG}. 
+
+```{r, fig.cap="\\label{fig:CG} Plotting chain graph component from `lDAG`.", fig.pos="H"}
+library(netchain)
+par(mar = c(4, 4, 1, 1))
+plotCG(lDAG)
+```
+
+
 ## Input observations
 
-To estimate the parameters in conditional log-linear model, we require enough observations to infer parameter values. Observations must contain a $m \times n$ matrix for binary $Y$ and $A$ respectively, where $m$ is the number of units and $n$ is the number of independent observations. Depending on the contexts of your scenario, we can enter no confounders (`listC = NULL`), a $m \times n$ matrix for `listC`, or a list of $m \times n$ matrices for `listC` for which of each matrix stands for observations for one confounding factors (we later call them `C1`, `C2`, ..., `Cq`).
+Chain graphs can be used to define hybrid graphical models combining features of both log-linear models on undirected graphs and DAG models used to represent causal relationships. Chain graphs provide justification of parsimonious conditional log-linear models to identify causal effects on the collective outcomes. 
+
+To estimate the parameters in conditional log-linear model, we require enough independent replicates of observations. Observations must take a form of a $m \times n$ matrix for binary $Y$ and $A$ respectively, where $m$ is the number of units and $n$ is the number of independent observations. Depending on the contexts of your scenario, we can enter no confounders (Defaults to `listC = NULL`), a $m \times n$ matrix for `listC`, or a list of $m \times n$ matrices for `listC` for which of each matrix stands for observations for one confounding factors (we later call them `C1`, `C2`, ..., `Cq`).
 
 We provide a simple function `simGibbs` to generate binary $(\mathbf{Y}, \mathbf{A}, \mathbf{C})$ from chain graph model under simple scenario, which requires additional structural information (`weight.matrix`, `treat.matrix`, and `cov.matrix`). Consider the following conditional log-linear model following chain graph model defined up-to two-way interaction effects:
 
@@ -47,6 +100,8 @@ head(inputY)
 head(inputA)
 head(inputC)
 ```
+
+
 
 
 ## Input edge information
@@ -77,7 +132,7 @@ With those observations and edge information, the next step is to infer paramete
 
 
 
-```
+```{r}
 set.seed(1234)
 library(netchain)
 weight.matrix = matrix(c(0.5, 1, 0, 1, 0.3, 0.5, 0, 0.5, -0.5), 3, 3)
@@ -91,23 +146,74 @@ inputC = simobs$inputC
 R.matrix = ifelse(weight.matrix==0, 0, 1)      
 diag(R.matrix) = 0
 
-result = chain.causal.multi(targetoutcome = "mean", treatment = c(1,0,0), inputY, inputA, listC = inputC, R.matrix = R.matrix, E.matrix = diag(3), edgeinfo = list(rbind(c("Y", 1), c("C", 1)), rbind(c("Y", 2), c("C", 2)), rbind(c("Y", 3), c("C", 3))), n.obs = 1000, n.burn = 100)
+#result = chain.causal.multi(targetoutcome = "mean", treatment = c(1,0,0), 
+#inputY, inputA, listC = inputC, R.matrix = R.matrix, E.matrix = diag(3),
+#edgeinfo = list(rbind(c("Y", 1), c("C", 1)), rbind(c("Y", 2), c("C", 2)),
+#rbind(c("Y", 3), c("C", 3))), n.obs = 1000, n.burn = 100)
 
-result
+#print(result)
 ```
 
+### Approximate DAG process
+
+
+```{r}
+sample.size <- 1000
+simcausaldat <- sim(DAG = lDAG, n = sample.size, rndseed = 1234)
+dat <- cbind(simcausaldat$A1_0, simcausaldat$A2_0, simcausaldat$A3_0,
+               simcausaldat$Y1_20, simcausaldat$Y2_20, simcausaldat$Y3_20)
+colnames(dat) <- c("A1", "A2", "A3", "Y1", "Y2", "Y3")
+dat <- as.data.frame(dat)
+```
+
+
+```{r}
+treatments <- c(1, 0, 1)
+act_theta <- c(node("A1", t = 0, distr = "rbern", prob = alpha),
+               node("A2", t = 0, distr = "rbern", prob = beta),
+               node("A3", t = 0, distr = "rbern", prob = gamma))
+lDAG <- lDAG + action("all_theta101", nodes = act_theta, 
+                      alpha = treatments[1], beta = treatments[2], gamma = treatments[3])
+Y1_treat101 <- set.targetE(DAG = lDAG, outcome = "Y1", t = t.end, 
+                        param = "all_theta101")
+Y2_treat101 <- set.targetE(DAG = lDAG, outcome = "Y2", t = t.end, 
+                           param = "all_theta101")
+Y3_treat101 <- set.targetE(DAG = lDAG, outcome = "Y3", t = t.end, 
+                           param = "all_theta101")
+results1 <- eval.target(Y1_treat101, n = 10000)$res
+results2 <- eval.target(Y2_treat101, n = 10000)$res
+results3 <- eval.target(Y3_treat101, n = 10000)$res
+print(c(results1, results2, results3))
+```
+
+
+```{r}
+library(gtools)
+R.matrix <- matrix(c(0, 1, 0, 1, 0, 1, 0, 1, 0), 3, 3)
+permat <- permutations(2, 3, c(0,1), repeats.allow = T)
+marginalY3 <- permat[which(permat[,3] == 1),]
+result.chain3 <- chain.causal.multi(targetoutcome = marginalY3,
+                                    treatment = treatments, 
+                                    inputY = cbind(dat$Y1, dat$Y2, dat$Y3), 
+                                    inputA = cbind(dat$A1, dat$A2, dat$A3), 
+                                    listC = NULL, R.matrix = R.matrix, 
+                                    E.matrix = diag(3), edgeinfo = NULL, 
+                                    n.obs = 500, n.burn = 100)$causalprob
+print(c(true = results3, estimate = result.chain3))
+```
 
 ## Identifying influential units
 
 A function `causal.influence` takes the same input as `chain.causal.multi` except that a specific `treatment` is replaced by `Avalues` that 
 In `causal.influence` we evaluate the average of collective outcomes under each treatment assignment $E\big[ \mathbf{Y}(\mathbf{a}_j) \big]$ as a measure of influence of unit $j$, where $a_j$ indicates the sole intervention of unit $j$, but `targetoutcome` can be a vector, matrix or an integer as that in `chain.causal.multi`. 
 
-```
+```{r}
 set.seed(1234)
-influence = causal.influence(targetoutcome = "mean", Avalues = c(1,0), 
-                            inputY, inputA, listC = inputC, R.matrix, E.matrix = diag(3), 
-                            edgeinfo = list(rbind(c("Y", 1), c("C", 1)), rbind(c("Y", 2), c("C", 2)), rbind(c("Y", 3), c("C", 3))), n.obs = 100, n.burn = 10)
-influence
+edgeinfo = list(rbind(c("Y", 1), c("C", 1)), rbind(c("Y", 2), c("C", 2)), rbind(c("Y", 3), c("C", 3)))
+#influence = causal.influence(targetoutcome = "mean", Avalues = c(1,0), 
+#                            inputY, inputA, listC = inputC, R.matrix, #E.matrix = diag(3), 
+#                            edgeinfo = edgeinfo, n.obs = 100, n.burn = 10)
+#print(influence)
 ```
 
 The above result says that $E \big[ \mathbf{Y}(\mathbf{a}_{3} ) \big] \approx 0.71$ achieves the highest influence, indicating that among three, treating unit $i=3$ would result highest average potential outcomes. 

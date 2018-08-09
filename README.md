@@ -11,7 +11,7 @@ We provide a function `simGibbs()` to generate binary outcomes, treatments, and 
 - Version: 0.1.0
 - Author : Elizabeth Ogburn (<eogburn@jhu.edu>), Ilya Shpitser (<ilyas@jhu.edu>), and Youjin Lee (<ylee160@jhu.edu>)
 - Maintainer : Youjin Lee (<ylee160@jhu.edu>)
-- Imports : Rcpp (>= 0.12.17), Matrix, gtools, stringr, stats
+- Imports: Rcpp (>= 0.12.17), Matrix, gtools, stringr, stats, igraph, simcausal
 - Linking to : Rcpp
 
 ## Installation

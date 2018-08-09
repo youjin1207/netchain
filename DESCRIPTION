@@ -14,7 +14,7 @@ Description: Derive the causal estimates on the collective outcome using chain g
 License: GPL (>=3) | file LICENSE
 Imports: Rcpp (>= 0.12.17), Matrix, gtools, stringr, stats, igraph, simcausal
 Suggests: knitr, rmarkdown,
-    testthat
+    testthat, R.rsp
 LinkingTo: Rcpp
-VignetteBuilder: knitr
+VignetteBuilder: R.rsp
 RoxygenNote: 6.0.1
