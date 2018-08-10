@@ -20,12 +20,12 @@ knitr::opts_chunk$set(
 
 ## Approximation of Directed Acyclic Graph (DAG)
 
-In social network, treatments may spill over from the treated individual to his or her social contacts and outcomes may be contagious. Therefore, causal inference using observational data from a single social network requires observing longitudinal data on treatments and outcomes as they evolve in real-time, so that each spillover or contagious event appears in the data. In these settings, directed acyclic graph (DAG) has been used to represent interference and contagion, but DAGs can quickly be cumbersome. Especially in most cases it is impossible to collect the kind of real-time data required. If it is, the resulting model will be generally high-dimensional and often too big to fit the available data. 
+In social network, treatments may spill over from the treated individual to his or her social contacts and outcomes may be contagious continuously. Therefore, causal inference using observational data from a single social network requires observing longitudinal data on treatments and outcomes as they evolve in real-time, so that each spillover or contagious event appears in the data. In these settings, directed acyclic graph (DAG) has been used to represent interference and contagion, but DAGs can quickly be cumbersome. Especially in most cases it is impossible to collect the kind of real-time data required. If it is, the resulting model will be generally high-dimensional and often too big to fit the available data. 
 
-To illustrate, using `simcausal` `R` package, we can define `DAG` object where outcome variables of $( Y^{t}_{1}, Y^{t}_{2}, Y^{t}_{3})$ from $t=0,1,2,\ldots,20$ while unit-specific treatment variable $(A_{1}, A_{2}, A_{3})$ has a causal effect on each of them. Figure \ref{fig:DAG} illustrates data generating mechanism or causal relationship which a `DAG` object of `lDAG` stands for.
+To illustrate, using `simcausal` `R` package, we can define `DAG` object where outcome variables of $( Y^{t}_{1}, Y^{t}_{2}, Y^{t}_{3})$ change over times $t=0,1,2,\ldots,20$ while unit-specific treatment variable $(A_{1}, A_{2}, A_{3})$ has a causal effect on each of them. Figure \ref{fig:DAG} illustrates data generating mechanism or causal relationship which a `DAG` object of `lDAG` stands for.
 
 
-```{r}
+```{r, cache = TRUE}
 library(simcausal)
 D <- DAG.empty()
 D <- D +
@@ -48,7 +48,8 @@ lDAG <- set.DAG(D, verbose = FALSE)
 ```
 
 
-```{r, fig.cap="\\label{fig:DAG} plotting an example of evolving outcome variables $(Y_{1}, Y_{2}, Y_{3})$ and treatment variables $(A_{1}, A_{2}, A_{3})$ following directed cyclic graph of `lDAG`.", fig.pos="H"}
+```{r, fig.cap="\\label{fig:DAG} plotting an example of evolving outcome variables $(Y_{1}, Y_{2}, Y_{3})$ and treatment variables $(A_{1}, A_{2}, A_{3})$ following directed cyclic graph of `lDAG`.", fig.pos="H", cache = TRUE}
+# draw Figure 1
 par(mar = c(4, 4, 1, 1))
 plotDAG(lDAG, tmax = 10, xjitter = 0.3, yjitter = 0.1,
      edge_attrs = list(width = 0.2, arrow.width = 0.5, arrow.size = 0.3),
@@ -61,7 +62,8 @@ Note that for causal inference, DAGs are only useful when if we observe all of t
 
 If $Y^{t}_{i}$ is approximated equal to $Y^{t-1}_{i}$, the conditional independence implied by the chain graph, which includes directed edges and undirected edges with no directed cycles, holds approximately in the DAG model. In this case, conditional (in)dependence structure in DAG from Figure \ref{fig:DAG} (approximately) holds for those of chain graph in Figure \ref{fig:CG}. 
 
-```{r, fig.cap="\\label{fig:CG} Plotting chain graph component from `lDAG`.", fig.pos="H"}
+```{r, fig.cap="\\label{fig:CG} Plotting chain graph component from `lDAG`.", fig.pos="H", cache = TRUE}
+# draw chain graph components from lDAG (Figure 2)
 library(netchain)
 par(mar = c(4, 4, 1, 1))
 plotCG(lDAG)
@@ -80,14 +82,14 @@ We provide a simple function `simGibbs` to generate binary $(\mathbf{Y}, \mathbf
 $$p\big( \mathbf{Y} = (y_{1}, y_{2}, \ldots, y_{m}) \mid \mathbf{A} = \mathbf{a}, \mathbf{C} = \mathbf{c} \big) = \frac{1}{Z} \exp \left\{ \sum\limits_{i,j=1}^{m} w_{ij} y_{i} y_{j} + \sum\limits_{i,j = 1}^{m} k_{ij} a_{i} y_{j} + \sum\limits_{i,j=1}^{m} h_{ij} c_{i} y_{j}   \right\}$$
 
 A $\mbox{weight.matrix}_{ij}~(w_{ij})$ indicates two-way interaction effects between $Y_{i}$ and $Y_{j}$ when $i\neq j$ and main effect of each outcomes when $i = j$. Note that by the construction of chain graph model, `weight.matrix` should be symmetric. 
-A $\mbox{treat.matrix}_{ij}~(t_{ij})$ indicates a direct causal effect of $A_{i}$ on $Y_{j}$; a $\mbox{cov.matrix}_{ij}~(h_{ij})$ indicates a direct causal effect of $C_{i}$ on $Y_{j}$.
+A $\mbox{treat.matrix}_{ij}~(k_{ij})$ indicates a direct causal effect of $A_{i}$ on $Y_{j}$; a $\mbox{cov.matrix}_{ij}~(h_{ij})$ indicates a direct causal effect of $C_{i}$ on $Y_{j}$.
 By the definition, `treat.matrix` and `cov.matrix` are directional. 
 
 
-The following codes generate $n=1000$ (`n.gibbs`$\times$`n.sample` = 500) observations of $m=3$ (`n.unit` = 3) units assuming chain graph of $Y_{1} -- Y_{2} -- Y_{3}$ and direct effect from $A_{i} \rightarrow Y_{i}$ and $C_{i} \rightarrow Y_{i}$ for $i=1,2,3$.
+The following codes generate $n=100$ (`n.gibbs`$\times$`n.sample` = $10 \times 10$) observations of $m=3$ (`n.unit` = 3) units assuming chain graph of $Y_{1} -- Y_{2} -- Y_{3}$ and direct effect from $A_{i} \rightarrow Y_{i}$ and $C_{i} \rightarrow Y_{i}$ for $i=1,2,3$.
 
 
-```{r}
+```{r, cache = TRUE}
 library(netchain)
 weight.matrix = matrix(c(0.5, 1, 0, 1, 0.3, 0.5, 0, 0.5, -0.5), 3, 3)
 simobs = simGibbs(n.unit = 3, n.gibbs = 10, n.sample = 10, 
@@ -109,22 +111,23 @@ head(inputC)
 With (outcomes, treatment, confounders) = (`inputY`, `inputA`, `listC`), we ultimately aim to calculate probability associated with counterfactual collective outcomes given a certain unit-specific treatment of length $m$, $\mathbf{a}$ (`treatment`):
 $$P\big( \mathbf{Y} ( \mathbf{a} ) = \mathbf{y} \big).$$
 
-Depending on the form of target outcomes $\mathbf{y}$, `targetoutcome` vary: in the above example of $m = 3$ units, `targetoucome = c(1,0,0)` indicates we want to calculate $P\big( \mathbf{Y}(\mathbf{a}) = c(1,0,0) \big)$. If we want to calculate the probability with multiple outcomes, e.g. homogeneous outcomes of (0,0,0) or (1,1,1), you can input a matrix `targetoutcome = rbind(c(0,0,0), (1,1,1))`. If you want to calculate the probability when only one unit has one, instead of listing all the possible outcomes `targetoutcome = rbind(c(1,0,0), c(0,1,0), c(0,0,1))`, you can specify the number of one (or maximum value of `inputY`): `targetoutcome = 1`.
+Depending on the form of target outcomes of $\mathbf{y}$, `targetoutcome` may vary: in the above example of $m = 3$ units, `targetoucome = (1,0,0)` indicates we want to calculate $P\big( \mathbf{Y}(\mathbf{a}) = (1,0,0) \big)$. If we want to calculate the probability of multiple outcomes, e.g. homogeneous (unanimous) outcomes of (0,0,0) or (1,1,1), you can input a matrix `targetoutcome = rbind(c(0,0,0), (1,1,1))`. If you want to calculate the probability when only one unit has one, instead of listing all mutually exclustive, possible outcomes `targetoutcome = rbind(c(1,0,0), c(0,1,0), c(0,0,1))`, you can specify the number of one (or maximum value of `inputY`): `targetoutcome = 1`.
+The default is `targetoutcome = "mean"`, which calculate $E[ \bar{Y} ] := E[(Y_{1} + Y_{2} + \ldots + Y_{n})/n]$.
 
-Most tricky and important part is edge information (`R.matrix`, `E.matrix`, and `edgeinfo`), which determines the factors put in the conditional log-linear model. 
+Most tricky but important part is edge information (`R.matrix`, `E.matrix`, and `edgeinfo`), which determines the factors put in the conditional log-linear model. 
 
 A `R.matrix` is $m \times m$ relational symmetric matrix where $\mbox{R.matrix}_{ij} = 1$ indicates $Y_{i}$ and $Y_{j}$ are adjacent, meaning the existence of interactions of feedback between the two. A `E.matrix` a $m \times m$ matrix where $\mbox{E.matrix}_{ij}$ indicates $A_{i}$ has a direct causal effect on $Y_{j}$; defaults to diagonal matrix, which indicates no interference. 
-On the other hand, `edgeinfo` a list of matrix specifying additional directed edges (from confounders (specified in `listC`) or treatment (`inputA`) to the outcomes (`inputY`)) information. Assume that `edgeinfo = list(mat1, mat2)` where both `mat1` and `mat2` are matrices. For each matrix the first column specifies the types of variables that must involve outcome variable, `"Y"` while `"A"` indicates treatment variable and `"C"` indicates confounder. If you input multiple confounders in `listC` as a list, `"C1"` indicates the first confounders, `"C2"` indicates the second, and so on. For each matrix the second column specifies an index for unit corresponding to the varaible in the first column. First example, 
-```{r}
+On the other hand, `edgeinfo` a list of matrix specifying additional directed edges (from confounders (specified in `listC`) or treatment (`inputA`) to the outcomes (`inputY`)) information. Assume that `edgeinfo = list(mat1, mat2)` where both `mat1` and `mat2` are matrices. For each matrix the first column specifies the types of variables that must involve outcome variable, `"Y"`; while `"A"` indicates treatment variable and `"C"` indicates confounder. If you input multiple confounders in `listC` as a list, `"C1"` indicates the first confounders, `"C2"` indicates the second, and so on. For each matrix the second column specifies an index for unit corresponding to the varaible in the first column. For example, 
+```{r, cache = TRUE}
 mat1 = rbind(c("Y", 1), c("A", 1), c("A", 2)) 
 ```
-implies that $A_{1}$ and $A_{2}$ have a direct causal effect on $Y_{1}$ and these two have a interaction effect; this will lead to three-way interaction term of $Y_{1}$, $A_{1}$, and $A_{2}$ in the log-linear model. (In this case a direct effect of $A_{1}$ on $Y_{1}$ and $A_{2}$ on $Y_{1}$ should be also specified.) 
+implies that $A_{1}$ and $A_{2}$ have a direct causal effect on $Y_{1}$ and these two have a interaction effect; this will lead to three-way interaction term of $Y_{1}$, $A_{1}$, and $A_{2}$ in the conditional log-linear model. (In this case a direct effect of $A_{1}$ on $Y_{1}$ and $A_{2}$ on $Y_{1}$ should be also (manually) specified.) 
 
-```
+```{r, cache = TRUE}
 mat2 = rbind(c("Y", 1), c("C1", 1), c("C2", 1)) 
 ```
 
-When you have multiple confounders and these confounders interactively have an effect on the outcomes, you can put edge information as `mat2`, which implies a direct effect of $C_{11}$ and $C_{21}$ on $Y$ but these effects are dependent each other. (In this case, you should include `rbind(c("Y", 1), c("C1",1))` and `rbind(c("Y", 1), c("C2", 1) )` in `edgeinfo`.) 
+When you have multiple confounders and these confounders interactively have an effect on the outcomes, you can put edge information as `mat2`, which implies a direct effect of $C_{11}$ and $C_{21}$ on $Y_{1}$ but these effects are dependent each other. (In this case, you should include `rbind(c("Y", 1), c("C1",1))` and `rbind(c("Y", 1), c("C2", 1) )` in `edgeinfo` manually.) 
 
 ## Counterfactual outcomes
 
@@ -132,7 +135,7 @@ With those observations and edge information, the next step is to infer paramete
 
 
 
-```{r}
+```{r, cache = TRUE}
 set.seed(1234)
 library(netchain)
 weight.matrix = matrix(c(0.5, 1, 0, 1, 0.3, 0.5, 0, 0.5, -0.5), 3, 3)
@@ -146,29 +149,28 @@ inputC = simobs$inputC
 R.matrix = ifelse(weight.matrix==0, 0, 1)      
 diag(R.matrix) = 0
 
-#result = chain.causal.multi(targetoutcome = "mean", treatment = c(1,0,0), 
-#inputY, inputA, listC = inputC, R.matrix = R.matrix, E.matrix = diag(3),
-#edgeinfo = list(rbind(c("Y", 1), c("C", 1)), rbind(c("Y", 2), c("C", 2)),
-#rbind(c("Y", 3), c("C", 3))), n.obs = 1000, n.burn = 100)
+result = chain.causal.multi(targetoutcome = "mean", treatment = c(1,0,0), 
+inputY, inputA, listC = inputC, R.matrix = R.matrix, E.matrix = diag(3),
+edgeinfo = list(rbind(c("Y", 1), c("C", 1)), rbind(c("Y", 2), c("C", 2)),
+rbind(c("Y", 3), c("C", 3))), n.obs = 1000, n.burn = 100)
 
-#print(result)
+print(result)
 ```
+
+From the results above, when $\mathbf{a} = (1,0,0)$, $E[\bar{Y}(\mathbf{a})]$ is around 0.59. 
 
 ### Approximate DAG process
 
 
-```{r}
+Using `sim` function provided in `R` package `simcausal`, we can generate simulated data following specified DAG (e.g. `lDAG` from Figure \ref{fig:DAG}). From the above example where we define `DAG` object of `lDAG`, we generate `sample.size` = 1000 observations to examine the performance of `chain.causal.multi` function to infer counterfactual outcomes ($\{ Y_{1}(\mathbf{a}), Y_{2}(\mathbf{a}), Y_{3} (\mathbf{a}) \}$) under specific treatment assignment of $\mathbf{a} = (1,0,1)$. Using `set.targetE` and `evel.target` functions from `simcausal`, we can derive (approximate) counterfactual outcomes under $\mathbf{a} = (1,0,1)$ by generating 10000 counterfactual outcomes.
+
+
+
+```{r, cache = TRUE}
 sample.size <- 1000
 simcausaldat <- sim(DAG = lDAG, n = sample.size, rndseed = 1234)
-dat <- cbind(simcausaldat$A1_0, simcausaldat$A2_0, simcausaldat$A3_0,
-               simcausaldat$Y1_20, simcausaldat$Y2_20, simcausaldat$Y3_20)
-colnames(dat) <- c("A1", "A2", "A3", "Y1", "Y2", "Y3")
-dat <- as.data.frame(dat)
-```
 
-
-```{r}
-treatments <- c(1, 0, 1)
+treatments <- c(1, 0, 1) # treatment assignment
 act_theta <- c(node("A1", t = 0, distr = "rbern", prob = alpha),
                node("A2", t = 0, distr = "rbern", prob = beta),
                node("A3", t = 0, distr = "rbern", prob = gamma))
@@ -180,18 +182,45 @@ Y2_treat101 <- set.targetE(DAG = lDAG, outcome = "Y2", t = t.end,
                            param = "all_theta101")
 Y3_treat101 <- set.targetE(DAG = lDAG, outcome = "Y3", t = t.end, 
                            param = "all_theta101")
-results1 <- eval.target(Y1_treat101, n = 10000)$res
-results2 <- eval.target(Y2_treat101, n = 10000)$res
-results3 <- eval.target(Y3_treat101, n = 10000)$res
+results1 <- eval.target(Y1_treat101, n = 10000, verbose = FALSE)$res
+results2 <- eval.target(Y2_treat101, n = 10000, verbose = FALSE)$res
+results3 <- eval.target(Y3_treat101, n = 10000, verbose = FALSE)$res
 print(c(results1, results2, results3))
 ```
 
+Those numbers above illustrate the (approximate) true counterfactual outcomes $\{ Y_{1}(\mathbf{a}), Y_{2}(\mathbf{a}), Y_{3}(\mathbf{a})\}$ under $\mathbf{a} = (1,0,1)$. From the below, we illustrate how `chain.causal.multi` esimates individual counterfactual outcomes as well as collective counterfactual outcomes when outcomes at the final stage ($\{ Y^{t=20}_{1}, Y^{t=20}_{2}, Y^{t=20}_{3} \}$) are only available among time-evolving outcomes. Inference on single counterfactual outcome can be easily done by specifying `targetoutcome` as a matrix of which rows contain all possible combinations where $Y_{1} = 1$. 
 
-```{r}
+
+```{r, cache = TRUE}
 library(gtools)
+dat <- cbind(simcausaldat$A1_0, simcausaldat$A2_0, simcausaldat$A3_0,
+               simcausaldat$Y1_20, simcausaldat$Y2_20, simcausaldat$Y3_20)
+colnames(dat) <- c("A1", "A2", "A3", "Y1", "Y2", "Y3")
+dat <- as.data.frame(dat)
 R.matrix <- matrix(c(0, 1, 0, 1, 0, 1, 0, 1, 0), 3, 3)
 permat <- permutations(2, 3, c(0,1), repeats.allow = T)
+marginalY1 <- permat[which(permat[,1] == 1),]
+print(marginalY1) ## note that values in the first column (Y1) are all 1.
+result.chain1 <- chain.causal.multi(targetoutcome = marginalY1,
+                                    treatment = treatments, 
+                                    inputY = cbind(dat$Y1, dat$Y2, dat$Y3), 
+                                    inputA = cbind(dat$A1, dat$A2, dat$A3), 
+                                    listC = NULL, R.matrix = R.matrix, 
+                                    E.matrix = diag(3), edgeinfo = NULL, 
+                                    n.obs = 500, n.burn = 100)$causalprob
+print(c(true = results1, estimate = result.chain1))
+```
+
+```{r, cache = TRUE, echo = FALSE}
+marginalY2 <- permat[which(permat[,2] == 1),]
 marginalY3 <- permat[which(permat[,3] == 1),]
+result.chain2 <- chain.causal.multi(targetoutcome = marginalY2,
+                                    treatment = treatments, 
+                                    inputY = cbind(dat$Y1, dat$Y2, dat$Y3), 
+                                    inputA = cbind(dat$A1, dat$A2, dat$A3), 
+                                    listC = NULL, R.matrix = R.matrix, 
+                                    E.matrix = diag(3), edgeinfo = NULL, 
+                                    n.obs = 500, n.burn = 100)$causalprob
 result.chain3 <- chain.causal.multi(targetoutcome = marginalY3,
                                     treatment = treatments, 
                                     inputY = cbind(dat$Y1, dat$Y2, dat$Y3), 
@@ -199,21 +228,29 @@ result.chain3 <- chain.causal.multi(targetoutcome = marginalY3,
                                     listC = NULL, R.matrix = R.matrix, 
                                     E.matrix = diag(3), edgeinfo = NULL, 
                                     n.obs = 500, n.burn = 100)$causalprob
+```
+
+Likewise we also estimate $Y_{2}(\mathbf{a})$ and $Y_{3}(\mathbf{a})$ by replacing `targetoutcome` matrix. 
+```{r}
+# Print out the results of Y_{2}(a) and Y_{3}(a)
+print(c(true = results2, estimate = result.chain2))
 print(c(true = results3, estimate = result.chain3))
 ```
+We have observed that bias decreases and coverage rate increases as the number of simulated data (`sample.size`) increases.
 
 ## Identifying influential units
 
-A function `causal.influence` takes the same input as `chain.causal.multi` except that a specific `treatment` is replaced by `Avalues` that 
-In `causal.influence` we evaluate the average of collective outcomes under each treatment assignment $E\big[ \mathbf{Y}(\mathbf{a}_j) \big]$ as a measure of influence of unit $j$, where $a_j$ indicates the sole intervention of unit $j$, but `targetoutcome` can be a vector, matrix or an integer as that in `chain.causal.multi`. 
+A function `causal.influence` takes the same input as `chain.causal.multi` except that a specific `treatment` is replaced by `Avalues` that will eventually generate a set of treatment assignments that treat (`Avalues` = 1) one unit while controlling (`Avalues` = 0) all the others.
+In this way, `causal.influence` evaluates the average of collective outcomes under each treatment assignment $E\big[ \mathbf{Y}(\mathbf{a}_j) \big]$ as a measure of influence of unit $j$, where $\mathbf{a}_j$ indicates the sole intervention of unit $j$, but `targetoutcome` can be a vector, matrix or an integer as the case of `chain.causal.multi`. 
 
-```{r}
+```{r, cache = TRUE}
 set.seed(1234)
-edgeinfo = list(rbind(c("Y", 1), c("C", 1)), rbind(c("Y", 2), c("C", 2)), rbind(c("Y", 3), c("C", 3)))
-#influence = causal.influence(targetoutcome = "mean", Avalues = c(1,0), 
-#                            inputY, inputA, listC = inputC, R.matrix, #E.matrix = diag(3), 
-#                            edgeinfo = edgeinfo, n.obs = 100, n.burn = 10)
-#print(influence)
+edgeinfo = list(rbind(c("Y", 1), c("C", 1)), rbind(c("Y", 2), c("C", 2)), 
+                rbind(c("Y", 3), c("C", 3)))
+influence = causal.influence(targetoutcome = "mean", Avalues = c(1,0), 
+                            inputY, inputA, listC = inputC, R.matrix, E.matrix = diag(3), 
+                            edgeinfo = edgeinfo, n.obs = 1000, n.burn = 100)
+print(influence)
 ```
 
-The above result says that $E \big[ \mathbf{Y}(\mathbf{a}_{3} ) \big] \approx 0.71$ achieves the highest influence, indicating that among three, treating unit $i=3$ would result highest average potential outcomes. 
+The above result says that $E \big[ \bar{\mathbf{Y}}(\mathbf{a}_{3} ) \big] \approx 0.71$ achieves the highest influence, indicating that among three, treating unit $i=3$ would result highest average potential outcomes. 
