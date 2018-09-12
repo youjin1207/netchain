@@ -162,7 +162,7 @@ From the results above, when $\mathbf{a} = (1,0,0)$, $E[\bar{Y}(\mathbf{a})]$ is
 ### Approximate DAG process
 
 
-Using `sim` function provided in `R` package `simcausal`, we can generate simulated data following specified DAG (e.g. `lDAG` from Figure \ref{fig:DAG}). From the above example where we define `DAG` object of `lDAG`, we generate `sample.size` = 1000 observations to examine the performance of `chain.causal.multi` function to infer counterfactual outcomes ($\{ Y_{1}(\mathbf{a}), Y_{2}(\mathbf{a}), Y_{3} (\mathbf{a}) \}$) under specific treatment assignment of $\mathbf{a} = (1,0,1)$. Using `set.targetE` and `evel.target` functions from `simcausal`, we can derive (approximate) counterfactual outcomes under $\mathbf{a} = (1,0,1)$ by generating 10000 counterfactual outcomes.
+Using `sim` function provided in `R` package `simcausal`, we can generate simulated data following specified DAG (e.g. `lDAG` from Figure \ref{fig:DAG}). From the above example where we define `DAG` object of `lDAG`, we generate `sample.size` = 1000 observations to examine the performance of `chain.causal.multi` function to infer counterfactual outcomes ($\{ Y_{1}(\mathbf{a}), Y_{2}(\mathbf{a}), Y_{3} (\mathbf{a}) \}$) under specific treatment assignment of $\mathbf{a} = (1,0,1)$. Using `set.targetE` and `eval.target` functions from `simcausal`, we can derive (approximate) counterfactual outcomes under $\mathbf{a} = (1,0,1)$ by generating 10000 counterfactual outcomes.
 
 
 

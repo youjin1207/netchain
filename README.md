@@ -4,7 +4,7 @@
 
 netchain is a R package for causal inference on collective outcomes under social network under interference or contagion. We proposed and justified a parsimonious parametrization for social network data, corresponding to particular family of graphical models known as chain graphs, with some specific kinds of interference and contagion. 
 
-We provide a function `simGibbs()` to generate binary outcomes, treatments, and confounders from chain graph model. A function `chain.causal.multi()` is to infer parameters in the conditional log-linear models that feature hybrid graphical models of undirected graphs and directed acyclic graphs (DAG). This function generates counterfactual outcomes using Gibbs sampling to given `treatment` assignment given the estimated parameters to estimate the probability associated with collective outcomes. We also provide a function of `causal.influence()` to identify the most (causally) influential subjects in social network based on the their causal effect on the collective outcomes. 
+We provide a function `simGibbs()` to generate binary outcomes, treatments, and confounders from chain graph model. A function `chain.causal.multi()` is to infer parameters in the conditional log-linear models that feature hybrid graphical models of undirected graphs and directed acyclic graphs (DAG). This function generates counterfactual outcomes using Gibbs sampling given `treatment` assignment and the parameter value to estimate the probability associated with collective outcomes. We also provide a function of `causal.influence()` to identify the most (causally) influential subjects in social network based on the their causal effect on the collective outcomes. 
 
 ## Package information
 
