@@ -4,7 +4,8 @@
 \alias{multiloglikechain}
 \title{Derive log-likelihood of conditional log-linear model given parameters.}
 \usage{
-multiloglikechain(pars, listobservations, permutetab, edgeY, edgeAY, edgeExtra)
+multiloglikechain(pars, listobservations, permutetab, edgeY, edgeAY,
+  edgeExtra)
 }
 \arguments{
 \item{pars}{a set of parameters}
