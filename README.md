@@ -1,10 +1,11 @@
 [![Travis-CI Build Status](https://travis-ci.org/youjin1207/netchain.svg?branch=master)](https://travis-ci.org/youjin1207/netchain)
+[![arXiv shield](https://img.shields.io/badge/arXiv-1812.04990-blue.svg?style=flat)](https://arxiv.org/abs/1812.04990)
 
 # Overview
 
-netchain is a R package for causal inference on collective outcomes under social network under interference or contagion. We proposed and justified a parsimonious parametrization for social network data, corresponding to particular family of graphical models known as chain graphs, with some specific kinds of interference and contagion. 
+netchain is a R package for causal inference on collective outcomes under social network. [Our paper](https://arxiv.org/abs/1812.04990) proposed and justified a parsimonious parametrization for social network data generated from causal directed acyclic graph (DAG), approximating a particular family of graphical models known as chain graphs under some conditions. 
 
-We provide a function `simGibbs()` to generate binary outcomes, treatments, and confounders from chain graph model. A function `chain.causal.multi()` is to infer parameters in the conditional log-linear models that feature hybrid graphical models of undirected graphs and directed acyclic graphs (DAG). This function generates counterfactual outcomes using Gibbs sampling given `treatment` assignment and the parameter value to estimate the probability associated with collective outcomes. We also provide a function of `causal.influence()` to identify the most (causally) influential subjects in social network based on the their causal effect on the collective outcomes. 
+We provide a function `simGibbs()` to generate binary outcomes, treatments, and confounders from chain graph model. A function `chain.causal.multi()` is to infer parameters in the conditional log-linear models that feature hybrid graphical models of undirected graphs and directed acyclic graphs (DAG). This function generates counterfactual outcomes using Gibbs sampling given `treatment` assignment and the estimated parameters to derive the probability associated with collective outcomes. We also provide a function of `causal.influence()` to identify the most (causally) influential subjects in social network based on the their causal effect on the collective outcomes. 
 
 ## Package information
 
@@ -63,3 +64,7 @@ influence = causal.influence(targetoutcome = "mean", Avalues = c(1,0),
                             edgeinfo = list(rbind(c("Y", 1), c("C", 1)), rbind(c("Y", 2), c("C", 2)), rbind(c("Y", 3), c("C", 3))), n.obs = 100, n.burn = 10)
 print(influence)
 ```
+
+## Reference
+
+Ogburn, E. L., Shpitser, I., \& Lee, Y. (2018). Causal inference, social networks, and chain graphs. _arXiv preprint arXiv:1812.04990_.

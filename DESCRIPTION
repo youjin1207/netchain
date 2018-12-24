@@ -5,7 +5,7 @@ Version: 0.1.0
 Date: 2018-06-14
 Author: c(person("Elizabeth", "Ogburn", role="aut",
 	   	        email="eogburn@jhu.edu"),
-          person("Ilya", "Shpitser", role = c("aut", "cre"),
+          person("Ilya", "Shpitser", role = "aut",
 	   	    email = "ilyas@cs.jhu.edu"),
 	     person("Youjin", "Lee", role = c("aut", "cre"),
 	     	    email = "ylee160@jhu.edu"))
@@ -17,5 +17,5 @@ Suggests: knitr, rmarkdown,
     testthat, R.rsp
 LinkingTo: Rcpp
 VignetteBuilder: R.rsp
-RoxygenNote: 6.1.0
+RoxygenNote: 6.1.1
 Encoding: UTF-8

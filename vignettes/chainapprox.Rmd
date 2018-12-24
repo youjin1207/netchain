@@ -20,15 +20,20 @@ knitr::opts_chunk$set(
 
 ## Approximation of Directed Acyclic Graph (DAG)
 
-In social network, treatments may spill over from the treated individual to his or her social contacts and outcomes may be contagious continuously. Therefore, causal inference using observational data from a single social network requires observing longitudinal data on treatments and outcomes as they evolve in real-time, so that each spillover or contagious event appears in the data. In these settings, directed acyclic graph (DAG) has been used to represent interference and contagion, but DAGs can quickly be cumbersome. Especially in most cases it is impossible to collect the kind of real-time data required. If it is, the resulting model will be generally high-dimensional and often too big to fit the available data. 
+In social network, treatments may spill over from the treated individual to his/her social contacts and outcomes may be contagious continuously. Therefore, causal inference using observational data from a single social network requires observing longitudinal data on treatments and outcomes as they evolve in real-time, so that every spillover or contagious event appears in the data. In these settings, directed acyclic graph (DAG) has been used to represent interference and contagion, but DAGs can quickly be cumbersome. Especially in most cases it is impossible to collect the kind of real-time data required. If it is, the resulting model will be generally high-dimensional and often too big to fit the available data. 
 
 To illustrate, using `simcausal` `R` package, we can define `DAG` object where outcome variables of $( Y^{t}_{1}, Y^{t}_{2}, Y^{t}_{3})$ change over times $t=0,1,2,\ldots,20$ while unit-specific treatment variable $(A_{1}, A_{2}, A_{3})$ has a causal effect on each of them. Figure \ref{fig:DAG} illustrates data generating mechanism or causal relationship which a `DAG` object of `lDAG` stands for.
 
 
-```{r, cache = TRUE}
+```{r, cache = TRUE, message = FALSE}
 devtools::install_github('osofr/simcausal', build_vignettes = FALSE)
 library(simcausal)
 library(igraph)
+```
+
+
+```{r, cache = TRUE, echo = FALSE}
+# visualize transformation of DAG to chain graph
 plotCG <- function(DAG, vertex_attrs = list(), edge_attrs = list()){
   if (!requireNamespace("igraph", quietly = TRUE)) {
     stop("igraph R package is required.", call. = FALSE)
@@ -51,17 +56,21 @@ plotCG <- function(DAG, vertex_attrs = list(), edge_attrs = list()){
   for (i in 1:length(chainset)) {
     
     t <- 1
-    tmp <- eval(parse(text = as.character(paste0("attr(DAG, \"parent\")", "$", chainset[i], "_" ,as.character(t)))))
+    tmp <- eval(parse(text = as.character(paste0("attr(DAG, \"parent\")",
+                                                 "$", chainset[i], "_" ,as.character(t)))))
     parentset[[i]] <- parents[parents %in% tmp]
-    friendset[[i]] <-  unlist(lapply(strsplit(tmp, "_"), '[[', 1 ))[which(as.integer(unlist(lapply(strsplit(tmp, "_"), '[[', 2 ))) == t-1)]
+    friendset[[i]] <-  unlist(lapply(strsplit(tmp, "_"), '[[', 
+                                     1))[which(as.integer(unlist(lapply(strsplit(tmp, "_"), '[[', 2 ))) == t-1)]
     
     for (t in 2:max.time) {
-      tmp <- eval(parse(text = as.character(paste0("attr(DAG, \"parent\")", "$", chainset[i], "_" ,as.character(t)))))
+      tmp <- eval(parse(text = as.character(paste0("attr(DAG, \"parent\")", 
+                                                   "$", chainset[i], "_" ,as.character(t)))))
       
       newparentset <- parents[parents %in% tmp] 
       parentset[[i]] <- newparentset[newparentset %in% parentset[[i]]]
       
-      newfriendset <- unlist(lapply(strsplit(tmp, "_"), '[[', 1 ))[which(as.integer(unlist(lapply(strsplit(tmp, "_"), '[[', 2 ))) == t-1)]
+      newfriendset <- unlist(lapply(strsplit(tmp, "_"), '[[', 
+                                    1 ))[which(as.integer(unlist(lapply(strsplit(tmp, "_"), '[[', 2 ))) == t-1)]
       friendset[[i]] <- newfriendset[newfriendset %in% friendset[[i]]]
     }
   }
@@ -88,7 +97,8 @@ plotCG <- function(DAG, vertex_attrs = list(), edge_attrs = list()){
   deleterow <- c()
   for (i in 1:nrow(edgelist)) {
     if (sum(edgelist[i,] %in% chainset) == 2) {
-      if (sum(rowSums(matrix(edgelist %in% edgelist[i,], ncol = 2)) == 2 ) < 2) deleterow <- c(deleterow, i) 
+      if (sum(rowSums(matrix(edgelist %in% edgelist[i,], 
+                             ncol = 2)) == 2 ) < 2) deleterow <- c(deleterow, i) 
     }
   }
   if (!is.null(deleterow)) edgelist <- edgelist[-deleterow,]
@@ -98,15 +108,16 @@ plotCG <- function(DAG, vertex_attrs = list(), edge_attrs = list()){
   attnames_edge <- names(edge_attrs)
   vertex_attrs_default <- list(color = NA, label.color = "seagreen", shape = "none", size = 15, label.cex = 1, label.dist = 0)
   edge_attrs_default <- list(color = "black", width = 1, lty = 1, arrow.width = 1, arrow.size = 1)
-  vertex_attrs <- append(vertex_attrs, vertex_attrs_default[!(names(vertex_attrs_default)%in%attnames_ver)])
-  edge_attrs <- append(edge_attrs, edge_attrs_default[!(names(edge_attrs_default)%in%attnames_edge)])
+  vertex_attrs <- append(vertex_attrs,
+                         vertex_attrs_default[!(names(vertex_attrs_default)%in%attnames_ver)])
+  edge_attrs <- append(edge_attrs,
+                       edge_attrs_default[!(names(edge_attrs_default)%in%attnames_edge)])
   ####
   
   g <- igraph::graph.empty()
   g <- igraph::add.vertices(g, nv = length(parentnode) + length(friendnode), attr = vertex_attrs)
   igraph::V(g)$name <- c(parentnode, friendnode)
   g <- igraph::add.edges(g, as.vector(t(edgelist)), attr = edge_attrs)
-  
   
   #g <- igraph::set.graph.attribute(g, 'layout')
   edgemode <- ifelse(rowSums(matrix(as_edgelist(g) %in% parentnode, ncol = 2) > 0), 1, 0)
@@ -145,8 +156,7 @@ plotDAG(lDAG, tmax = 10, xjitter = 0.3, yjitter = 0.1,
 
 
 Note that for causal inference, DAGs are only useful when if we observe all of the $Y^{t}_{i}$ variables. However we often observe outcomes at certain time point after some unknown process of interference or contagion: in the above case, $(Y^{t=20}_{1}, Y^{t=20}_{2}, Y^{t=20}_{3})$.  
-
-If $Y^{t}_{i}$ is approximated equal to $Y^{t-1}_{i}$, the conditional independence implied by the chain graph, which includes directed edges and undirected edges with no directed cycles, holds approximately in the DAG model. In this case, conditional (in)dependence structure in DAG from Figure \ref{fig:DAG} (approximately) holds for those of chain graph in Figure \ref{fig:CG}. 
+If $Y^{t}_{i}$ is approximated equal to $Y^{t-1}_{i}$, the conditional independence implied by the chain graph, which includes directed edges and undirected edges with no directed cycles, holds approximately in the DAG model under certain conditions (\href{https://arxiv.org/abs/1812.04990}{Ogburn et al. (2018)}). In the above case, conditional (in)dependence structure in DAG from Figure \ref{fig:DAG} (approximately) holds for those of chain graph in Figure \ref{fig:CG}. 
 
 ```{r, fig.cap="\\label{fig:CG} Plotting chain graph component from `lDAG`.", fig.pos="H", cache = TRUE}
 # draw chain graph components from lDAG (Figure 2)
@@ -158,7 +168,7 @@ plotCG(lDAG)
 
 ## Input observations
 
-Chain graphs can be used to define hybrid graphical models combining features of both log-linear models on undirected graphs and DAG models used to represent causal relationships. Chain graphs provide justification of parsimonious conditional log-linear models to identify causal effects on the collective outcomes. 
+Chain graph can be used to define hybrid graphical models combining features of both log-linear models on undirected graphs and DAG models that are used to represent causal relationships. Chain graph is useful for causal inference in network data mainly because it provides justification of parsimonious conditional log-linear models to identify causal effects on the collective outcomes. 
 
 To estimate the parameters in conditional log-linear model, we require enough independent replicates of observations. Observations must take a form of a $m \times n$ matrix for binary $Y$ and $A$ respectively, where $m$ is the number of units and $n$ is the number of independent observations. Depending on the contexts of your scenario, we can enter no confounders (Defaults to `listC = NULL`), a $m \times n$ matrix for `listC`, or a list of $m \times n$ matrices for `listC` for which of each matrix stands for observations for one confounding factors (we later call them `C1`, `C2`, ..., `Cq`).
 
@@ -340,3 +350,7 @@ print(influence)
 ```
 
 The above result says that $E \big[ \bar{\mathbf{Y}}(\mathbf{a}_{3} ) \big] \approx 0.71$ achieves the highest influence, indicating that among three, treating unit $i=3$ would result highest average potential outcomes. 
+
+## Reference
+
+Ogburn, E. L., Shpitser, I., \& Lee, Y. (2018). Causal inference, social networks, and chain graphs. \textit{arXiv preprint arXiv:1812.04990.}
