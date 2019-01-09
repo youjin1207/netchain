@@ -2,15 +2,15 @@ Package: netchain
 Type: Package
 Title: Inferring Causal Effects on Collective Outcomes under Interference
 Version: 0.1.0
-Date: 2018-06-14
-Author: c(person("Elizabeth", "Ogburn", role="aut",
+Date: 2019-01-02
+Authors@R: c(person("Elizabeth", "Ogburn", role="aut",
 	   	        email="eogburn@jhu.edu"),
           person("Ilya", "Shpitser", role = "aut",
 	   	    email = "ilyas@cs.jhu.edu"),
 	     person("Youjin", "Lee", role = c("aut", "cre"),
 	     	    email = "ylee160@jhu.edu"))
 Maintainer: Youjin Lee <ylee160@jhu.edu>
-Description: Derive the causal estimates on the collective outcome using chain graph models approximating the projection of the full longitudinal data onto the observed data, which is missing most of the time points from the full data.
+Description: In networks, treatments may spill over from the treated individual to his or her social contacts and outcomes may be contagious over time. Under this setting, causal inference on the collective outcome observed over all network is often of interest. We use chain graph models approximating the projection of the full longitudinal data onto the observed data to identify the causal effect of the intervention on the whole outcome. Justification of such approximation is demonstrated in Ogburn et al. (2018) <arXiv:1812.04990>.
 License: GPL (>=3) | file LICENSE
 Imports: Rcpp (>= 0.12.17), Matrix, gtools, stringr, stats, igraph
 Suggests: knitr, rmarkdown,
