@@ -1,4 +1,6 @@
 [![Travis-CI Build Status](https://travis-ci.org/youjin1207/netchain.svg?branch=master)](https://travis-ci.org/youjin1207/netchain)
+![![Downloads badge](http://cranlogs.r-pkg.org/badges/netchain)](http://cranlogs.r-pkg.org/badges/netchain?color=red)
+ [![](http://cranlogs.r-pkg.org/badges/grand-total/netchain?color=yellow)](https://CRAN.R-project.org/package=netchain)
 [![arXiv shield](https://img.shields.io/badge/arXiv-1812.04990-blue.svg?style=flat)](https://arxiv.org/abs/1812.04990)
 
 # Overview
