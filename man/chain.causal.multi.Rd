@@ -4,9 +4,19 @@
 \alias{chain.causal.multi}
 \title{Causal estimation on collective outcomes under multiple confounders and interference.}
 \usage{
-chain.causal.multi(targetoutcome = "mean", treatment, inputY, inputA,
-  listC, R.matrix, E.matrix, edgeinfo = NULL, n.obs = 1000,
-  n.burn = 100, optim.method = "L-BFGS-B")
+chain.causal.multi(
+  targetoutcome = "mean",
+  treatment,
+  inputY,
+  inputA,
+  listC,
+  R.matrix,
+  E.matrix,
+  edgeinfo = NULL,
+  n.obs = 1000,
+  n.burn = 100,
+  optim.method = "L-BFGS-B"
+)
 }
 \arguments{
 \item{targetoutcome}{is a targeted couterfactual outcome of probability is in our interest, having different forms: 

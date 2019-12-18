@@ -4,8 +4,17 @@
 \alias{chaingibbs}
 \title{Generate Gibbs samplers for counterfactual collective outcomes.}
 \usage{
-chaingibbs(pars, n.obs, treatment, covariates, initprob = 0.5,
-  yvalues = c(0, 1), Neighborind, Neighborpar, n.burn)
+chaingibbs(
+  pars,
+  n.obs,
+  treatment,
+  covariates,
+  initprob = 0.5,
+  yvalues = c(0, 1),
+  Neighborind,
+  Neighborpar,
+  n.burn
+)
 }
 \arguments{
 \item{pars}{a set of parameters}

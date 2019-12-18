@@ -4,9 +4,19 @@
 \alias{simGibbs}
 \title{Generate binary (\strong{Y}, \strong{A}, \strong{C}) from chain graph model under simplest scenario.}
 \usage{
-simGibbs(n.unit, n.gibbs, n.sample, weight.matrix, treat.matrix,
-  cov.matrix, init.prob = 0.5, treat.prob = 0.5, cov.prob = 0.5,
-  n.burn = 100, yvalues = c(1, 0))
+simGibbs(
+  n.unit,
+  n.gibbs,
+  n.sample,
+  weight.matrix,
+  treat.matrix,
+  cov.matrix,
+  init.prob = 0.5,
+  treat.prob = 0.5,
+  cov.prob = 0.5,
+  n.burn = 100,
+  yvalues = c(1, 0)
+)
 }
 \arguments{
 \item{n.unit}{the number of units (\code{m}).}

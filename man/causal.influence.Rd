@@ -4,9 +4,19 @@
 \alias{causal.influence}
 \title{Identifying causally influential units on social network}
 \usage{
-causal.influence(targetoutcome = "mean", Avalues, inputY, inputA, listC,
-  R.matrix, E.matrix, edgeinfo = NULL, n.obs = 1000, n.burn = 100,
-  optim.method = "L-BFGS-B")
+causal.influence(
+  targetoutcome = "mean",
+  Avalues,
+  inputY,
+  inputA,
+  listC,
+  R.matrix,
+  E.matrix,
+  edgeinfo = NULL,
+  n.obs = 1000,
+  n.burn = 100,
+  optim.method = "L-BFGS-B"
+)
 }
 \arguments{
 \item{targetoutcome}{is a targeted couterfactual outcome of probability is in our interest, having different forms depending on the context of influence : 

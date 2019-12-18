@@ -76,11 +76,11 @@ chain.causal.multi = function(targetoutcome = "mean", treatment, inputY, inputA,
   allobservations = list()
   for(i in 1:nrow(inputY)){
     allobservations[[i]] = rbind(inputY[i,], inputA[i,])
-    if(class(listC) == "list"){
+    if("list" %in% class(listC)){
       for(r in 1:length(listC)){
         allobservations[[i]] = rbind(allobservations[[i]], listC[[r]][i,])
       }
-    }else if(class(listC) == "matrix"){
+    }else if("matrix" %in% class(listC)){
       allobservations[[i]] = rbind(allobservations[[i]], listC[i,])
     }
   }
@@ -172,7 +172,7 @@ chain.causal.multi = function(targetoutcome = "mean", treatment, inputY, inputA,
                            n.burn = n.burn)
     if(class(targetoutcome) == "numeric" & length(targetoutcome) == ncol(inputY)){
       targets = targets + mean(rowMeans(outcomes == targetoutcome) == 1 ) / length(allobservations)
-    }else if(class(targetoutcome) == "matrix" ){
+    }else if("matrix" %in%  class(targetoutcome)){
       for(jj in 1:nrow(targetoutcome)){
         targets = targets +  mean(apply(outcomes, 1, function(x) identical(x, targetoutcome[jj,])))  / length(allobservations)
       }

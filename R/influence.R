@@ -75,11 +75,11 @@ causal.influence <- function(targetoutcome = "mean", Avalues, inputY, inputA, li
   allobservations = list()
   for (i in 1:nrow(inputY)) {
     allobservations[[i]] <- rbind(inputY[i,], inputA[i,])
-    if (class(listC) == "list") {
+    if ("list" %in% class(listC)) {
       for (r in 1:length(listC)) {
         allobservations[[i]] <- rbind(allobservations[[i]], listC[[r]][i,])
       }
-    } else if (class(listC) == "matrix") {
+    } else if ("matrix" %in% class(listC)) {
         allobservations[[i]] <- rbind(allobservations[[i]], listC[i,])
     }
   }
@@ -176,7 +176,7 @@ causal.influence <- function(targetoutcome = "mean", Avalues, inputY, inputA, li
                              n.burn = 100)
       if (class(targetoutcome) == "numeric" & length(targetoutcome) == ncol(inputY)) {
         targets[k] <- targets[k] + mean(rowMeans(outcomes == targetoutcome) == 1 ) / length(allobservations)
-      } else if (class(targetoutcome) == "matrix") {
+      } else if ("matrix" %in% class(targetoutcome)) {
         for (jj in 1:nrow(targetoutcome)) {
           targets[k] <- targets[k] +mean(rowMeans(outcomes == targetoutcome[jj,]) == 1 ) / length(allobservations)
         }

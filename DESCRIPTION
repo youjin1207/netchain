@@ -17,5 +17,5 @@ Suggests: knitr, rmarkdown,
     testthat, R.rsp
 LinkingTo: Rcpp
 VignetteBuilder: R.rsp
-RoxygenNote: 6.1.1
+RoxygenNote: 7.0.0
 Encoding: UTF-8
