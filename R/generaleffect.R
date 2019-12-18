@@ -109,13 +109,13 @@ chain.causal.multi = function(targetoutcome = "mean", treatment, inputY, inputA,
   edgeY[which(edgeY[,2] == 0), 1] = edgeY[which(edgeY[,2] == 0),1] -1
   edgeY[which(edgeY[,2] == 0), 2] = nrow(R.matrix)
   edgeY = edgeY[which(edgeY[,1] < edgeY[,2]),]
-  if(class(edgeY) == "numeric") edgeY = t(as.matrix(edgeY))
+  if("numeric" %in% class(edgeY)) edgeY = t(as.matrix(edgeY))
   colnames(edgeY) = c("Y", "Y")
   
   edgeAY = cbind(which(E.matrix == 1) %% nrow(E.matrix), which(E.matrix == 1) %/% nrow(E.matrix) + 1)
   edgeAY[which(edgeAY[,1] == 0), 2] = edgeAY[which(edgeAY[,1] == 0),2] -1
   edgeAY[which(edgeAY[,1] == 0), 1] = nrow(E.matrix)
-  if(class(edgeAY) == "numeric") edgeAY = t(as.matrix(edgeAY))
+  if("numeric" %in% class(edgeAY)) edgeAY = t(as.matrix(edgeAY))
   colnames(edgeAY) = c("A", "Y")
   
   ## define n.par and par.est ##
@@ -127,7 +127,7 @@ chain.causal.multi = function(targetoutcome = "mean", treatment, inputY, inputA,
                       edgeAY = edgeAY, edgeExtra = edgeExtra,
                       control = list(fnscale = -1), method = optim.method)$par,
                 silent = TRUE)
-  if(class(par.est) == "try-error") return("noconvergence")
+  if("try-error" %in% class(par.est) ) return("noconvergence")
   
   #multiloglikechain(NumericVector pars, List allobservations, NumericMatrix permutetab)
   Neighborind = Neighborpar = list()
@@ -170,13 +170,13 @@ chain.causal.multi = function(targetoutcome = "mean", treatment, inputY, inputA,
     }
     outcomes =  chaingibbs(pars = par.est, n.obs = n.obs, treatment, covariates, initprob = 0.5, yvalues = c(0,1), Neighborind, Neighborpar,
                            n.burn = n.burn)
-    if(class(targetoutcome) == "numeric" & length(targetoutcome) == ncol(inputY)){
+    if("numeric" %in% class(targetoutcome) & length(targetoutcome) == ncol(inputY)){
       targets = targets + mean(rowMeans(outcomes == targetoutcome) == 1 ) / length(allobservations)
     }else if("matrix" %in%  class(targetoutcome)){
       for(jj in 1:nrow(targetoutcome)){
         targets = targets +  mean(apply(outcomes, 1, function(x) identical(x, targetoutcome[jj,])))  / length(allobservations)
       }
-    }else if(class(targetoutcome) == "numeric" & length(targetoutcome) == 1){
+    }else if("numeric" %in% class(targetoutcome) & length(targetoutcome) == 1){
       targets = targets +  mean(rowSums(outcomes == max(yvalues)) == targetoutcome ) / length(allobservations)
     }else{
       targets = targets + mean(rowMeans(outcomes == max(yvalues))) / length(allobservations)
